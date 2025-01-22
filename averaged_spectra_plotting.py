@@ -158,7 +158,6 @@ def create_html(dataset, start_old, start_recent, end, plot_output_path):
     with open(html_path, 'w') as file:
         averaged_plot_html = averaged_fig.to_html(config={'responsive': True}, include_plotlyjs=True, full_html=False)
         phase_plot_html = phase_fig.to_html(config={'responsive': True}, include_plotlyjs=False, full_html=False)
-        
         file.write(f"""
         <html>
         <head>
@@ -169,7 +168,6 @@ def create_html(dataset, start_old, start_recent, end, plot_output_path):
                     justify-content: space-between;
                     width: 90%;
                 }}
-
                 select {{
                     font-size: 12px;
                     padding: 5px;
