@@ -88,7 +88,7 @@ def create_temperate_humidity_fig(dataset, sensors, start, end):
     fig = go.Figure()
     text_for_html_annotation = f"""
     Temperature-Humidity phase plot.<br>
-    Points with more vivid colors are are more recent.<br><br>
+    Points with more vivid colors are more recent.<br><br>
     """
     colors = px.colors.sample_colorscale("Portland", len(sensors))
     helsinki_tz = ZoneInfo('Europe/Helsinki')
@@ -216,7 +216,7 @@ def create_html(dataset, start_old, start_recent, end, plot_output_path):
 
             <div class="container">
             <name>
-                Beehive acoustic simmiliarity
+                Beehive acoustic similiarity
             </name>
                 <select id="imageSelectorDistance">
                     <option value="plots/distance-measures-sensor-20.png">Sensor 20</option>
