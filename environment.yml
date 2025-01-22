@@ -1,0 +1,13 @@
+name: simple_bees
+channels:
+  - defaults
+dependencies:
+  - matplotlib=3.9.2
+  - pandas=2.1
+  - python=3.10.14
+  - requests=2.31.0
+  - scipy=1.14.1
+  - seaborn=0.13.2
+  - xarray=2023.6.0
+  - plotly
+  - kaleido  # Required for static image export

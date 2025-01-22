@@ -1,0 +1,36 @@
+CSV file for sensor 20 is saved as data/sensor_20_from_2025-01-18_to_2025-01-22.csv
+CSV file for sensor 21 is saved as data/sensor_21_from_2025-01-18_to_2025-01-22.csv
+CSV file for sensor 46 is saved as data/sensor_46_from_2025-01-18_to_2025-01-22.csv
+CSV file for sensor 109 is saved as data/sensor_109_from_2025-01-18_to_2025-01-22.csv
+
+Dataset:
+<xarray.Dataset>
+Dimensions:                   (datetime: 467, sensor: 4, channel: 2028)
+Coordinates:
+  * datetime                  (datetime) object 2025-01-18T00:13:08+00:00 ......
+  * sensor                    (sensor) int64 20 21 46 109
+  * channel                   (channel) int64 0 1 2 3 4 ... 2024 2025 2026 2027
+Data variables:
+    spectrum                  (datetime, sensor, channel) float64 4.245 ... 0...
+    sensor_type               (datetime, sensor) float64 0.0 nan ... nan 48.0
+    sensor_pack               (datetime, sensor) float64 3.892e+03 nan ... 225.0
+    base                      (datetime, sensor) float64 10.0 nan ... nan 113.0
+    temperature               (datetime, sensor) float64 7.0 nan ... nan 2.08
+    humidity                  (datetime, sensor) float64 71.73 nan ... nan 79.43
+    spectrum_length           (datetime, sensor) float64 1.848e+03 ... 2.028e+03
+    frequency_scaling_factor  (datetime, sensor) float64 0.4011 nan ... 0.7257
+    frequency_min             (datetime, sensor) float64 80.22 nan ... nan 14.51
+    frequency_max             (datetime, sensor) float64 821.1 nan ... 1.485e+03
+    frequency_start_index     (datetime, sensor) float64 200.0 nan ... nan 20.0
+Spectra for sensor  20: (80.22- 821.05 Hz) (1848 bins) (2028 bins before NaN stripping) 
+Spectra for sensor  21: (80.22- 821.05 Hz) (1848 bins) (2028 bins before NaN stripping) 
+Spectra for sensor  46: (80.22- 821.05 Hz) (1848 bins) (2028 bins before NaN stripping) 
+Spectra for sensor 109: (14.51-1485.49 Hz) (2028 bins) (2028 bins before NaN stripping) 
+Type used for DateTime: <class 'pandas._libs.tslibs.timestamps.Timestamp'>
+Memory used for dataset: 29.064 MB
+Last DateTime: 2025-01-22 21:44:13+02:00
+
+Plot plots/distance-measures-sensor-20.png was created!
+Plot plots/distance-measures-sensor-21.png was created!
+Plot plots/distance-measures-sensor-46.png was created!
+Plot plots/distance-measures-sensor-109.png was created!
