@@ -10,4 +10,3 @@ dependencies:
   - seaborn=0.13.2
   - xarray=2023.6.0
   - plotly
-  - kaleido  # Required for static image export
