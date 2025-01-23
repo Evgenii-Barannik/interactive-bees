@@ -182,7 +182,7 @@ def create_html(dataset, start_old, start_recent, end, plot_output_path):
                 }}
 
                 .plot-container {{
-                    width: 100vw;
+                    width: 98vw;
                     aspect-ratio: 1.333;
                 }}
 
