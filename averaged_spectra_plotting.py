@@ -23,6 +23,7 @@ def filter(ds, sensor_id, start, end):
 def normalize_spectrum(arr):
     arr = np.asarray(arr)
     max_val = np.max(arr)
+
     assert max_val != 0
     return 100 * arr / max_val
 
@@ -184,6 +185,8 @@ def create_html(dataset, start_old, start_recent, end, plot_output_path):
                 .plot-container {{
                     width: 98vw;
                     aspect-ratio: 1.333;
+                    max-height: 95vh; 
+                    overflow: visible; 
                 }}
 
                 details {{
