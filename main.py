@@ -6,8 +6,9 @@ from zoneinfo import ZoneInfo
 from datetime import datetime
 from pathlib import Path
 
-from correlations_plotting import *
-from averaged_spectra_plotting import * 
+from mpl_plots import *
+from plotly_plots import * 
+from html_templating import *
 from preprocessing import *
 
 if __name__ == "__main__":
@@ -33,13 +34,18 @@ if __name__ == "__main__":
     csv_files = download_csv_if_needed(sensors, helsinki_days_ago, helsinki_now, data_dir) 
     dataset = load_dataset(csv_files)
 
-    os.makedirs(plots_dir, exist_ok=True)
-    html_pathname = create_html(
-        dataset, 
-        start_old=helsinki_days_ago,
-        start_recent=helsinki_24h_ago,
-        end=helsinki_now, 
-        plot_output_path=plots_dir
-    )
-    index_path = Path(html_pathname).absolute().as_uri()
-    webbrowser.open(index_path)
+    averaged_plot_html, averaged_legend = create_averaged_plot_html(dataset, helsinki_days_ago, helsinki_now)
+    phase_plot_html, phase_legend = create_temp_humidity_plot_html(dataset, dataset["sensor"].values, helsinki_24h_ago, helsinki_now)
+    _, distance_legend = plot_correlations(dataset, helsinki_days_ago, helsinki_now, plots_dir)
+
+    html_data = {
+        "phase_plot_html": phase_plot_html,
+        "averaged_plot_html": averaged_plot_html,
+        "averaged_legend": averaged_legend,
+        "phase_legend": phase_legend,
+        "distance_legend": distance_legend,
+    }
+
+    html_path = render_html(html_data)
+    webbrowser.open(Path(html_path).absolute().as_uri())
+

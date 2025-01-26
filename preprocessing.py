@@ -22,7 +22,7 @@ def get_text_for_legend(filtered_dataset):
     text_for_legend = f"First datapoint: {start_time}\nLast datapoint: {end_time}\nNumber of datapoints: {num_of_datapoints}\n" 
     return text_for_legend
 
-# My CICD
+# My CICD for images
 def show_image(image_name):
     lyn_app_path = "/Applications/Lyn.app"
     if os.path.exists(lyn_app_path):

@@ -1,4 +1,5 @@
 
 plots/*.png
+plots/*.html
 data/*.csv
 __pycache__/*.pyc
