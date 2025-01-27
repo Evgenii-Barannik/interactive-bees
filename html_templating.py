@@ -1,6 +1,8 @@
 from jinja2 import Environment, FileSystemLoader
+
 from plotly_plots import * 
 from mpl_plots import * 
+from constants import *
 
 def render_html(html_data):
     env = Environment(loader=FileSystemLoader('templates'))
@@ -33,6 +35,17 @@ if __name__ == "__main__":
     sensors = [20, 21, 46, 109]
     csv_files = download_csv_if_needed(sensors, helsinki_days_ago, helsinki_now, data_dir) 
     dataset = load_dataset(csv_files)
+
+    # if os.path.exists("html_block.html"):
+    #     with open("html_block.html", "r", encoding="utf-8") as f:
+    #         html_block = f.read()
+    # else:
+    #     html_block = create_html_block()
+
+    # with open(html_path, 'w') as file:
+    #     averaged_plot_html, _ = create_averaged_plot_html(dataset, helsinki_days_ago, helsinki_now)
+    #     phase_plot_html, _ = create_temp_humidity_plot_html(dataset, dataset["sensor"].values, helsinki_24h_ago, helsinki_now)
+    #     file.write(averaged_plot_html + phase_plot_html)
 
     averaged_plot_html, averaged_legend = create_averaged_plot_html(dataset, helsinki_days_ago, helsinki_now)
     phase_plot_html, phase_legend = create_temp_humidity_plot_html(dataset, dataset["sensor"].values, helsinki_24h_ago, helsinki_now)

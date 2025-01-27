@@ -9,12 +9,14 @@ import math
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from constants import *
+
 def get_non_nan_spectrum(spectrum):
     spectrum = np.asarray(spectrum)
     assert np.any(~np.isnan(spectrum)), "Array contains only NaN values."
     return spectrum[~np.isnan(spectrum)]
 
-def get_text_for_legend(filtered_dataset):
+def get_info_about_datapoints(filtered_dataset):
     helsinki_tz = ZoneInfo('Europe/Helsinki')
     num_of_datapoints = filtered_dataset['datetime'].shape[-1]
     start_time = str(filtered_dataset['datetime'].values[0].astimezone(helsinki_tz))
@@ -162,10 +164,9 @@ if __name__ == "__main__":
         ]
     )
 
-    data_dir = "data"
     helsinki_tz = ZoneInfo('Europe/Helsinki')
     helsinki_now = datetime.now(helsinki_tz)
 
     sensors_test = [20, 21, 109]
-    files_test = download_csv_if_needed(sensors_test, helsinki_now, helsinki_now, data_dir)
+    files_test = download_csv_if_needed(sensors_test, helsinki_now, helsinki_now, DATA_DIR)
     dataset_test = load_dataset(files_test)

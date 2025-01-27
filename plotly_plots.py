@@ -10,6 +10,7 @@ import plotly.express as px
 
 from preprocessing import * 
 from mpl_plots import *
+from constants import *
 
 def filter(ds, sensor_id, start, end):
     filtered = ds.sel(sensor=sensor_id).where(
@@ -30,7 +31,7 @@ def create_averaged_plot_html(dataset, start, end):
     fig = go.Figure()
     text_for_html_annotation = """
     Each shown spectrum is created by averaging
-    spectra from multiple datapoints and then normalizing resulting spectrum.<br><br>
+    spectra from multiple datapoints and then normalizing the result.<br><br>
     """
     all_sensors = dataset["sensor"].values
     colors = px.colors.sample_colorscale("Portland", len(all_sensors))
@@ -42,7 +43,7 @@ def create_averaged_plot_html(dataset, start, end):
             logging.info(f"Dataset for sensor {sensor} is empty. Skipping plotting")
             continue
         averaged_spectrum = normalize_spectrum(get_non_nan_spectrum(filtered_dataset.mean(dim='datetime')['spectrum'].values))
-        text_for_html_annotation = text_for_html_annotation + "For sensor {}:<br>{}<br>".format(sensor, get_text_for_legend(filtered_dataset)).replace('\n', '<br>')
+        text_for_html_annotation = text_for_html_annotation + "For sensor {}:<br>{}<br>".format(sensor, get_info_about_datapoints(filtered_dataset)).replace('\n', '<br>')
         spectrum_len_non_nan = averaged_spectrum.shape[0]
         frequency_scaling_factor = filtered_dataset['frequency_scaling_factor'].values[0]
         frequency_start_index = filtered_dataset['frequency_start_index'].values[0]
@@ -98,16 +99,14 @@ def create_temp_humidity_plot_html(dataset, sensors, start, end):
     for i, sensor in enumerate(sensors):
         filtered_dataset = filter(dataset, sensor, start, end)
         
-        # Get temperature and humidity data
         temperatures = filtered_dataset['temperature'].values
         humidities = filtered_dataset['humidity'].values
         times = filtered_dataset['datetime'].values
         
-        # Calculate time ago for hover text and opacity
         floating_hours_time_ago = [(last_datetime - t).total_seconds()/3600 for t in times]
         max_ago = max(floating_hours_time_ago)
         opacities = [0.2 + 0.8 * (1 - t/max_ago) for t in floating_hours_time_ago]
-        text_for_html_annotation = text_for_html_annotation + "For sensor {}:<br>{}<br>".format(sensor, get_text_for_legend(filtered_dataset)).replace('\n', '<br>')
+        text_for_html_annotation = text_for_html_annotation + "For sensor {}:<br>{}<br>".format(sensor, get_info_about_datapoints(filtered_dataset)).replace('\n', '<br>')
         fig.add_trace(
             go.Scatter(
                 x=temperatures,
@@ -165,17 +164,15 @@ if __name__ == "__main__":
     helsinki_days_ago = helsinki_now - pd.Timedelta(days=4)
     helsinki_24h_ago = helsinki_now - pd.Timedelta(days=1)
 
-    data_dir = "data"
-    plots_dir = "plots"
-    html_path = "plots/plotly_plots.html"
-    os.makedirs(data_dir, exist_ok=True)
-    os.makedirs(plots_dir, exist_ok=True)
+    os.makedirs(DATA_DIR, exist_ok=True)
+    os.makedirs(PLOTS_DIR, exist_ok=True)
 
     sensors = [20, 21, 46, 109]
-    csv_files = download_csv_if_needed(sensors, helsinki_days_ago, helsinki_now, data_dir) 
+    csv_files = download_csv_if_needed(sensors, helsinki_days_ago, helsinki_now, DATA_DIR) 
     dataset = load_dataset(csv_files)
-    with open(html_path, 'w') as file:
+    with open(COMBINED_PLOTLY_PLOTS_PATHNAME, 'w') as file:
         averaged_plot_html, _ = create_averaged_plot_html(dataset, helsinki_days_ago, helsinki_now)
         phase_plot_html, _ = create_temp_humidity_plot_html(dataset, dataset["sensor"].values, helsinki_24h_ago, helsinki_now)
         file.write(averaged_plot_html + phase_plot_html)
-    webbrowser.open(Path(html_path).absolute().as_uri())
+        logging.info(f"HTML file {COMBINED_PLOTLY_PLOTS_PATHNAME} created")
+    webbrowser.open(Path(COMBINED_PLOTLY_PLOTS_PATHNAME).absolute().as_uri())

@@ -2,15 +2,15 @@ from scipy.spatial.distance import pdist, squareform
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from datetime import datetime
-from matplotlib.ticker import FuncFormatter
-from zoneinfo import ZoneInfo
+import matplotlib.colors as mcolors
 import plotly.express as px
 import copy
 import os
+from datetime import datetime
+from matplotlib.ticker import FuncFormatter
+from zoneinfo import ZoneInfo
 
 from preprocessing import *
-import matplotlib.colors as mcolors
 
 def get_portland_colormap(num = 256):
     plotly_colors = px.colors.sample_colorscale("Portland", num)
@@ -69,18 +69,17 @@ def get_ticks_between(start, end):
         ticks.append(moving)
     return ticks
 
-def get_text_for_legend(filtered_dataset):
-    helsinki_tz = ZoneInfo('Europe/Helsinki')
-    num_of_datapoints = filtered_dataset['datetime'].shape[-1]
-    start_time = str(filtered_dataset['datetime'].values[0].astimezone(helsinki_tz))
-    end_time = str(filtered_dataset['datetime'].values[-1].astimezone(helsinki_tz))
-    text_for_legend = f"First datapoint: {start_time}\nLast datapoint: {end_time}\nNumber of datapoints: {num_of_datapoints}\n" 
-    return text_for_legend
-
 def plot_correlations(ds, start, end, output_path):
     assert start < end
     utc_tz = ZoneInfo('UTC')
-    text_for_html_annotation = ""
+    full_annotation = ""
+    intro_for_annotation = """
+    These plots show if acoustic spectra obtained at different points of time are similar. The horizontal axis shows time when one spectrum was obtained, the vertical axis shows when the other spectrum was obtained. The larger the distance, the greater is the difference. The distance here is similar to the distance between points on a geographical map. Four different metrics represent four ways of calculating the distance. The simplest of them is the Euclidean distance, which is calculated using the Pythagorean theorem, but in a multidimensional space. As you see, the main diagonal is always blue, indicating zero distance. This happens because main diagonal shows the results of comparing spectra with themself. For any true metric, the distance between something and itself must be zero: Distance(A, A) = 0.<br><br>
+
+    Also, each plot is symmetric with respect to the main diagonal — you can place a mirror along the blue line and recreate the second half. This happens because the Distance(A, B) will correspond to Distance(B, A) after reflection. For any true metric, the distance between one_thing and another_thing must be equal to the distance between another_thing and one_thing: Distance(A, B) = Distance(B, A).<br><br>
+
+    So, what can we see in these plots? One should look for a patterns. A periodic pattern in the image will indicate periodicity of the signal over time. If pattern in the image nearly reproduces itself when shifted horizontally or vertically by 24 hours, it reveals the daily periodicity of signal.<br><br>
+    """
     distance_images = []
     for sensor in ds["sensor"].values:
         filtered_dataset = ds.sel(sensor=sensor).where(
@@ -105,7 +104,7 @@ def plot_correlations(ds, start, end, output_path):
         x_edges = voronoi_edges_extended
         y_edges = voronoi_edges_extended
 
-        # # Compute distances, will be used to color Voronoi cells
+        # Compute distances, will be used to color Voronoi cells
         spectra = filtered_dataset['spectrum'].values
         spectra = strip_nan_columns(spectra)
 
@@ -152,9 +151,10 @@ def plot_correlations(ds, start, end, output_path):
             for epoch in np.array([t.timestamp() for t in measurment_datetimes]): # Dots for timestamps
                 ax.scatter(epoch, epoch, color='black', s=0.5)
 
-        text_for_html_annotation = text_for_html_annotation + "For sensor {}:<br>{}<br>".format(sensor, get_text_for_legend(filtered_dataset)).replace('\n', '<br>')
-        fig.text(0.35, 0.97, f"Signal from sensor {sensor}", fontsize=18)
-        plt.tight_layout(pad=3)  
+        annotation_to_place_on_plot = "Similarity measures for signal from sensor {}:\n{}".format(sensor, get_info_about_datapoints(filtered_dataset))
+        fig.text(0.6, 0.88, annotation_to_place_on_plot, ha='right', fontsize=14)
+        plt.tight_layout(pad=2.5)
+        fig.subplots_adjust(top=0.88)
 
         # Save plot
         img_pathname = os.path.join(output_path, f"distance-measures-sensor-{sensor}.png")
@@ -162,7 +162,8 @@ def plot_correlations(ds, start, end, output_path):
         plt.savefig(img_pathname, dpi=300)
         plt.close()
         logging.info(f"Plot {img_pathname} was created!")
-    return distance_images, text_for_html_annotation
+        full_annotation = full_annotation + f"For sensor {sensor}:<br>" + get_info_about_datapoints(filtered_dataset) + "<br>"
+    return distance_images, intro_for_annotation + full_annotation.replace('\n', '<br>') 
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -174,16 +175,16 @@ if __name__ == "__main__":
     )
 
     helsinki_tz = ZoneInfo('Europe/Helsinki')
-    helsinki_now = datetime.now(helsinki_tz) 
-    helsinki_days_ago = helsinki_now - pd.Timedelta(days=4)
+    # helsinki_now = datetime.now(helsinki_tz) 
+    # helsinki_days_ago = helsinki_now - pd.Timedelta(days=4)
+    helsinki_start = datetime(2024, 8, 11, tzinfo = helsinki_tz)
+    helsinki_end = datetime(2024, 8, 15, tzinfo = helsinki_tz)
 
-    data_dir = "data"
-    plots_dir = "plots"
-    os.makedirs(data_dir, exist_ok=True)
-    os.makedirs(plots_dir, exist_ok=True)
+    os.makedirs(DATA_DIR, exist_ok=True)
+    os.makedirs(PLOTS_DIR, exist_ok=True)
 
-    sensors = [109]
-    csv_files = download_csv_if_needed(sensors, helsinki_days_ago, helsinki_now, data_dir) 
+    sensors = [21]
+    csv_files = download_csv_if_needed(sensors, helsinki_start, helsinki_end, DATA_DIR) 
     dataset = load_dataset(csv_files)
-    correlations, _ = plot_correlations(dataset, helsinki_days_ago, helsinki_now, plots_dir)
+    correlations, _ = plot_correlations(dataset, helsinki_start, helsinki_end, PLOTS_DIR)
     show_image(correlations[0])
