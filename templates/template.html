@@ -37,19 +37,19 @@
 </head>
 <body style="margin: 0;">
     <div class="plot-container">
-	{{averaged_plot_html}}
+	{{acoustic_spectra_plot}}
     </div>
     <details>
 	<summary>More info</summary>
-	{{averaged_legend}}
+	{{acoustic_spectra_info}}
     </details>
 
     <div class="plot-container">
-	{{phase_plot_html}}
+	{{temperature_humidity_plot}}
     </div>
     <details>
 	<summary>More info</summary>
-	{{phase_legend}}
+	{{temperature_humidity_info}}
     </details>
 
     <div class="container">
@@ -57,16 +57,16 @@
 	Beehive acoustic similarity
     </name>
 	<select id="imageSelectorDistance">
-	    <option value="plots/distance-measures-sensor-20.png">Sensor 20</option>
-	    <option value="plots/distance-measures-sensor-21.png">Sensor 21</option>
-	    <option value="plots/distance-measures-sensor-46.png">Sensor 46</option>
-	    <option value="plots/distance-measures-sensor-109.png">Sensor 109</option>
+	    <option value="{{OUTPUT_DIR}}/distance-measures-sensor-20.png">Sensor 20</option>
+	    <option value="{{OUTPUT_DIR}}/distance-measures-sensor-21.png">Sensor 21</option>
+	    <option value="{{OUTPUT_DIR}}/distance-measures-sensor-46.png">Sensor 46</option>
+	    <option value="{{OUTPUT_DIR}}/distance-measures-sensor-109.png">Sensor 109</option>
 	</select>
     </div>
-    <img id="displayedImageDistance" src="plots/distance-measures-sensor-20.png" alt="Distances">
+    <img id="displayedImageDistance" src="{{OUTPUT_DIR}}/distance-measures-sensor-20.png" alt="Distances">
     <details>
 	<summary>More info</summary>
-	{{distance_legend}}
+	{{similarity_info}}
     </details>
     <script>
 	const imageSelectorDistance = document.getElementById('imageSelectorDistance');

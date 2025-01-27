@@ -1,6 +1,5 @@
-
-plots/*.png
-plots/*.html
-data/*.csv
-__pycache__/*.pyc
+output/*
+data/*
+__pycache__/*
 index.html
+

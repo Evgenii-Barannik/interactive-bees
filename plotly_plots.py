@@ -1,10 +1,7 @@
-import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 import os
 import webbrowser
-from datetime import datetime
-from zoneinfo import ZoneInfo
 from pathlib import Path
 import plotly.express as px
 
@@ -27,7 +24,7 @@ def normalize_spectrum(arr):
     assert max_val != 0
     return 100 * arr / max_val
 
-def create_averaged_plot_html(dataset, start, end):
+def plot_acoustic_spectra(dataset, start, end, output_path):
     fig = go.Figure()
     text_for_html_annotation = """
     Each shown spectrum is created by averaging
@@ -83,18 +80,24 @@ def create_averaged_plot_html(dataset, start, end):
         margin=dict(l=25, r=25, t=75, b=0, pad=0),
     )
     
+    # Plot and info are both saved and returned
     rendered_html = fig.to_html(config={'responsive': True}, include_plotlyjs=True, full_html=False)
+    os.makedirs(output_path, exist_ok=True)
+    with open(ACOUSTIC_SPECTRA_PLOT_PATHNAME, 'w') as file:
+        file.write(rendered_html)
+    with open(ACOUSTIC_SPECTRA_INFO_PATHNAME, 'w') as file:
+        file.write(text_for_html_annotation)
+    logging.info(f"HTML file {ACOUSTIC_SPECTRA_PLOT_PATHNAME} was created!")
     return rendered_html, text_for_html_annotation
 
-def create_temp_humidity_plot_html(dataset, sensors, start, end):
+def plot_temperature_humidity(dataset, sensors, start, end, output_path):
     fig = go.Figure()
     text_for_html_annotation = f"""
     Temperature-Humidity phase plot.<br>
     Points with more vivid colors are more recent.<br><br>
     """
     colors = px.colors.sample_colorscale("Portland", len(sensors))
-    helsinki_tz = ZoneInfo('Europe/Helsinki')
-    last_datetime = max(dataset["datetime"].values).astimezone(helsinki_tz)
+    last_datetime = max(dataset["datetime"].values).astimezone(HELSINKI_TZ)
 
     for i, sensor in enumerate(sensors):
         filtered_dataset = filter(dataset, sensor, start, end)
@@ -126,7 +129,7 @@ def create_temp_humidity_plot_html(dataset, sensors, start, end):
                     'Ago from most recent datapoint: %{customdata[1]:.1f} h<extra></extra>'
                 ),
                 customdata=list(zip(
-                    ['{}'.format(t.astimezone(helsinki_tz)) for t in times],
+                    ['{}'.format(t.astimezone(HELSINKI_TZ)) for t in times],
                     floating_hours_time_ago,
                 ))
             )
@@ -147,7 +150,15 @@ def create_temp_humidity_plot_html(dataset, sensors, start, end):
         margin=dict(l=25, r=25, t=75, b=0, pad=0)
     )
 
+    # Plot and info are both saved and returned
     rendered_html = fig.to_html(config={'responsive': True}, include_plotlyjs=True, full_html=False)
+    os.makedirs(output_path, exist_ok=True)
+    with open(TEMPERATURE_HUMIDIY_PLOT_PATHNAME, 'w') as file:
+        file.write(rendered_html)
+    with open(TEMPERATURE_HUMIDIY_INFO_PATHNAME, 'w') as file:
+        file.write(text_for_html_annotation)
+
+    logging.info(f"HTML file {TEMPERATURE_HUMIDIY_PLOT_PATHNAME} was created!")
     return rendered_html, text_for_html_annotation
 
 if __name__ == "__main__":
@@ -159,20 +170,13 @@ if __name__ == "__main__":
         ]
     )
 
-    helsinki_tz = ZoneInfo('Europe/Helsinki')
-    helsinki_now = datetime.now(helsinki_tz)
-    helsinki_days_ago = helsinki_now - pd.Timedelta(days=4)
-    helsinki_24h_ago = helsinki_now - pd.Timedelta(days=1)
-
-    os.makedirs(DATA_DIR, exist_ok=True)
-    os.makedirs(PLOTS_DIR, exist_ok=True)
-
     sensors = [20, 21, 46, 109]
-    csv_files = download_csv_if_needed(sensors, helsinki_days_ago, helsinki_now, DATA_DIR) 
+    csv_files = download_csv_if_needed(sensors, HELSINKI_4DAYS_AGO, HELSINKI_NOW, DATA_DIR) 
     dataset = load_dataset(csv_files)
-    with open(COMBINED_PLOTLY_PLOTS_PATHNAME, 'w') as file:
-        averaged_plot_html, _ = create_averaged_plot_html(dataset, helsinki_days_ago, helsinki_now)
-        phase_plot_html, _ = create_temp_humidity_plot_html(dataset, dataset["sensor"].values, helsinki_24h_ago, helsinki_now)
+    averaged_plot_html, _ = plot_acoustic_spectra(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW, OUTPUT_DIR)
+    phase_plot_html, _ = plot_temperature_humidity(dataset, dataset["sensor"].values, HELSINKI_24HOURS_AGO, HELSINKI_NOW, OUTPUT_DIR)
+    with open(PLOTLY_PLOTS_PATHNAME, 'w') as file:
         file.write(averaged_plot_html + phase_plot_html)
-        logging.info(f"HTML file {COMBINED_PLOTLY_PLOTS_PATHNAME} created")
-    webbrowser.open(Path(COMBINED_PLOTLY_PLOTS_PATHNAME).absolute().as_uri())
+        logging.info(f"HTML file {PLOTLY_PLOTS_PATHNAME} created")
+    
+    webbrowser.open(Path(PLOTLY_PLOTS_PATHNAME).absolute().as_uri())

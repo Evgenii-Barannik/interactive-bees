@@ -1,16 +1,12 @@
-import pandas as pd
 import logging
 import webbrowser
-import os
-from zoneinfo import ZoneInfo
-from datetime import datetime
 from pathlib import Path
 
+from html_templating import create_html
 from mpl_plots import *
 from plotly_plots import * 
 from preprocessing import *
 from constants import *
-from html_templating import render_html
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -22,28 +18,32 @@ if __name__ == "__main__":
         ]
     )
 
-    helsinki_tz = ZoneInfo('Europe/Helsinki')
-    helsinki_now = datetime.now(helsinki_tz)
-    helsinki_days_ago = helsinki_now - pd.Timedelta(days=4)
-    helsinki_24h_ago = helsinki_now - pd.Timedelta(days=1)
-
-    os.makedirs(DATA_DIR, exist_ok=True)
-    os.makedirs(PLOTS_DIR, exist_ok=True)
     sensors = [20, 21, 46, 109]
-    csv_files = download_csv_if_needed(sensors, helsinki_days_ago, helsinki_now, DATA_DIR) 
+    csv_files = download_csv_if_needed(sensors, HELSINKI_4DAYS_AGO, HELSINKI_NOW, DATA_DIR) 
     dataset = load_dataset(csv_files)
-
-    averaged_plot_html, averaged_legend = create_averaged_plot_html(dataset, helsinki_days_ago, helsinki_now)
-    phase_plot_html, phase_legend = create_temp_humidity_plot_html(dataset, dataset["sensor"].values, helsinki_24h_ago, helsinki_now)
-    _, distance_legend = plot_correlations(dataset, helsinki_days_ago, helsinki_now, PLOTS_DIR)
+    acoustic_spectra_plot, acoustic_spectra_info = plot_acoustic_spectra(
+            dataset,
+            HELSINKI_4DAYS_AGO,
+            HELSINKI_NOW,
+            OUTPUT_DIR
+    )
+    temperature_humidity_plot, temperature_humidity_info = plot_temperature_humidity(
+            dataset,
+            dataset["sensor"].values,
+            HELSINKI_24HOURS_AGO,
+            HELSINKI_NOW,
+            OUTPUT_DIR
+    )
+    _, similarity_info = plot_similarity(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW, OUTPUT_DIR)
 
     html_data = {
-        "phase_plot_html": phase_plot_html,
-        "averaged_plot_html": averaged_plot_html,
-        "averaged_legend": averaged_legend,
-        "phase_legend": phase_legend,
-        "distance_legend": distance_legend,
+        "acoustic_spectra_plot" : acoustic_spectra_plot,
+        "acoustic_spectra_info" : acoustic_spectra_info,
+        "temperature_humidity_plot": temperature_humidity_plot,
+        "temperature_humidity_info": temperature_humidity_info,
+        "similarity_info": similarity_info,
+        "OUTPUT_DIR": OUTPUT_DIR
     }
 
-    html_path = render_html(html_data)
+    html_path = create_html(html_data)
     webbrowser.open(Path(html_path).absolute().as_uri())

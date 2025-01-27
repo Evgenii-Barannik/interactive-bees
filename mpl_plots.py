@@ -11,6 +11,7 @@ from matplotlib.ticker import FuncFormatter
 from zoneinfo import ZoneInfo
 
 from preprocessing import *
+from constants import *
 
 def get_portland_colormap(num = 256):
     plotly_colors = px.colors.sample_colorscale("Portland", num)
@@ -54,8 +55,7 @@ def calculate_euclidean_distance(spectra):
     return distance_matrix
 
 def format_time_to_helsinki(x, _):
-    helsinki_tz = ZoneInfo('Europe/Helsinki')
-    dt = datetime.fromtimestamp(x, tz=helsinki_tz) # Timestamps are converted to Helsinki timezone
+    dt = datetime.fromtimestamp(x, tz=HELSINKI_TZ) # Timestamps are converted to Helsinki timezone
     return dt.strftime('%H:%M %d')
 
 def get_ticks_between(start, end):
@@ -69,7 +69,7 @@ def get_ticks_between(start, end):
         ticks.append(moving)
     return ticks
 
-def plot_correlations(ds, start, end, output_path):
+def plot_similarity(ds, start, end, output_path):
     assert start < end
     utc_tz = ZoneInfo('UTC')
     full_annotation = ""
@@ -156,14 +156,19 @@ def plot_correlations(ds, start, end, output_path):
         plt.tight_layout(pad=2.5)
         fig.subplots_adjust(top=0.88)
 
-        # Save plot
         img_pathname = os.path.join(output_path, f"distance-measures-sensor-{sensor}.png")
         distance_images.append(img_pathname) 
+        os.makedirs(output_path, exist_ok=True)
         plt.savefig(img_pathname, dpi=300)
         plt.close()
-        logging.info(f"Plot {img_pathname} was created!")
+        logging.info(f"PNG file {img_pathname} was created!")
         full_annotation = full_annotation + f"For sensor {sensor}:<br>" + get_info_about_datapoints(filtered_dataset) + "<br>"
-    return distance_images, intro_for_annotation + full_annotation.replace('\n', '<br>') 
+
+    full_annotation = intro_for_annotation + full_annotation.replace('\n', '<br>')
+    with open(SIMILARITY_INFO_PATHNAME, 'w') as file:
+        file.write(full_annotation)
+    logging.info(f"HTML file {SIMILARITY_INFO_PATHNAME} was created!")
+    return distance_images, full_annotation
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -174,17 +179,11 @@ if __name__ == "__main__":
         ]
     )
 
-    helsinki_tz = ZoneInfo('Europe/Helsinki')
-    # helsinki_now = datetime.now(helsinki_tz) 
-    # helsinki_days_ago = helsinki_now - pd.Timedelta(days=4)
-    helsinki_start = datetime(2024, 8, 11, tzinfo = helsinki_tz)
-    helsinki_end = datetime(2024, 8, 15, tzinfo = helsinki_tz)
-
-    os.makedirs(DATA_DIR, exist_ok=True)
-    os.makedirs(PLOTS_DIR, exist_ok=True)
+    helsinki_start = datetime(2024, 8, 11, tzinfo = HELSINKI_TZ)
+    helsinki_end = datetime(2024, 8, 15, tzinfo = HELSINKI_TZ)
 
     sensors = [21]
     csv_files = download_csv_if_needed(sensors, helsinki_start, helsinki_end, DATA_DIR) 
     dataset = load_dataset(csv_files)
-    correlations, _ = plot_correlations(dataset, helsinki_start, helsinki_end, PLOTS_DIR)
+    correlations, _ = plot_similarity(dataset, helsinki_start, helsinki_end, OUTPUT_DIR)
     show_image(correlations[0])
