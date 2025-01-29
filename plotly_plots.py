@@ -101,12 +101,15 @@ def plot_temperature_humidity(dataset, sensors, start, end, output_path):
 
     for i, sensor in enumerate(sensors):
         filtered_dataset = filter(dataset, sensor, start, end)
+        if filtered_dataset['datetime'].shape[0] == 0:
+            logging.info(f"No data for sensor {sensor}")
+            continue
         
         temperatures = filtered_dataset['temperature'].values
         humidities = filtered_dataset['humidity'].values
         times = filtered_dataset['datetime'].values
         
-        floating_hours_time_ago = [(last_datetime - t).total_seconds()/3600 for t in times]
+        floating_hours_time_ago = [(last_datetime - t).total_seconds()/3600 for t in times] + [0.01] # Placeholder constant
         max_ago = max(floating_hours_time_ago)
         opacities = [0.2 + 0.8 * (1 - t/max_ago) for t in floating_hours_time_ago]
         text_for_html_annotation = text_for_html_annotation + "For sensor {}:<br>{}<br>".format(sensor, get_info_about_datapoints(filtered_dataset)).replace('\n', '<br>')
