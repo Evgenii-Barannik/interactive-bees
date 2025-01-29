@@ -17,7 +17,7 @@ def get_portland_colormap(num = 256):
     plotly_colors = px.colors.sample_colorscale("Portland", num)
     colors = []
     for rgb_str in plotly_colors:
-        rgb_values = rgb_str.strip('rgb()').split(',')
+        rgb_values = str(rgb_str).strip('rgb()').split(',')
         r, g, b = [int(x) for x in rgb_values]
         hex_color = f'#{r:02x}{g:02x}{b:02x}'
         colors.append(hex_color)
