@@ -5,9 +5,8 @@
     flex: 1;
 }
 
-.plot-and-control-container {
-    max-width: 98vw;
-    max-height: 98vh;
+.plot-outer-container {
+    max-height: 100vh;
     display: flex;
     flex-direction: column;
 }
@@ -16,5 +15,5 @@
 }
 
 .main-container {
-    width: 96vw;
+    width: 98vw;
 }
