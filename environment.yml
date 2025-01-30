@@ -1,4 +1,4 @@
-name: simple_bees
+name: interactive_bees
 channels:
   - defaults
 dependencies:
@@ -7,6 +7,5 @@ dependencies:
   - python=3.10.14
   - requests=2.31.0
   - scipy=1.14.1
-  - seaborn=0.13.2
   - xarray=2023.6.0
   - plotly

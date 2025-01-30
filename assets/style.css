@@ -1,0 +1,20 @@
+/* Style for plot itself only*/
+.plot-container {
+    aspect-ratio: 1.333;
+    min-height: 0;
+    flex: 1;
+}
+
+.plot-and-control-container {
+    max-width: 98vw;
+    max-height: 98vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.details-container {
+}
+
+.main-container {
+    width: 96vw;
+}
