@@ -1,11 +1,11 @@
-import plotly.graph_objects as go
 import numpy as np
-# import os
-# import webbrowser
-# from pathlib import Path
+import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
 from dash import Dash, html, dcc, Output, Input
+import logging
+from pathlib import Path
+
 from preprocessing import * 
 from mpl_plots import *
 from constants import *
@@ -25,14 +25,6 @@ def normalize_spectrum(arr):
     assert max_val != 0
     return 100 * arr / max_val
 
-def get_info_for_datapoints(dataset, initial_text):
-    datetimes = dataset["datetime"].values
-    for sensor in dataset["sensor"].values:
-        filtered_dataset = filter(dataset, sensor, min(datetimes), max(datetimes)) # Gives all points for specific sensor
-        if filtered_dataset['datetime'].shape[0] > 0:
-            initial_text += f"**For sensor {sensor}:**\n{get_info_about_datapoints(filtered_dataset)}\n\n"
-    return initial_text
-
 def plot_acoustic_spectra(dataset, start_time, end_time):
     fig = go.Figure()
     all_sensors = dataset["sensor"].values
@@ -42,11 +34,9 @@ def plot_acoustic_spectra(dataset, start_time, end_time):
         filtered_dataset = filter(dataset, sensor, start_time, end_time)
         if filtered_dataset['datetime'].shape[0] == 0:
             continue
-            
         averaged_spectrum = normalize_spectrum(
             get_non_nan_spectrum(filtered_dataset.mean(dim='datetime')['spectrum'].values)
         )
-        
         spectrum_len = averaged_spectrum.shape[0]
         freq_factor = filtered_dataset['frequency_scaling_factor'].values[0]
         freq_start = filtered_dataset['frequency_start_index'].values[0]
@@ -58,6 +48,7 @@ def plot_acoustic_spectra(dataset, start_time, end_time):
             name=f'Sensor {sensor}',
             marker_color=colors[i],
             opacity=0.7,
+            line_shape='spline',
             hovertemplate='(%{y:.1f}%, %{x:.1f} Hz<extra></extra>)', #<extra></extra> removes sensor number(it is obvious anyway)
         ))
     
@@ -148,64 +139,94 @@ def create_app(dataset):
     range_start_idx = 0
     range_end_idx = len(time_positions_for_slider) - 1
     
-    info_acoustic_initial_text = "Each shown spectrum is created by averaging spectra from multiple datapoints and then normalizing the result.\n\n"
-    info_th_diagramm_initial_text = "Temperature-Humidity phase plot. Points with more vivid colors are more recent.\n\n"
-    info_acoustic_spectra = get_info_for_datapoints(dataset, info_acoustic_initial_text)
-    info_th_diagramm = get_info_for_datapoints(dataset, info_th_diagramm_initial_text)
+    sensors = dataset["sensor"].values
+
+    info_datapoints = get_info_about_all_datapoints(dataset)
+    with open(f'{OUTPUT_DIR}/{ACOUSTIC_SPECTRA_INFO}') as f:
+        info_acoustic_spectra = f.read()
+    with open(f'{OUTPUT_DIR}/{TEMPERATURE_HUMIDIY_INFO}') as f:
+        info_th_diagram = f.read()
+    with open(f'{OUTPUT_DIR}/{SIMILARITY_INFO}') as f:
+        info_distance = f.read()
 
     app.layout = html.Div([
         html.Div([
-            dcc.Graph( # Will be updated by slider 
+            dcc.Graph(
                 id='spectrum-plot',
-                className='plot-container',
+                className='plot-outer-container',
                 config={
                     'scrollZoom': False,
                     'doubleClick': 'reset+autosize',
                     'modeBarButtonsToRemove': ['lasso2d', 'pan2d']
                 }
             ),
-            html.Div(id='time-slider-info'), # Will be updated by slider 
-            dcc.RangeSlider( # Slider
-                id='time-slider',
-                min=0,
-                max=len(time_positions_for_slider)-1,
-                value=[range_start_idx, range_end_idx],
-                marks={
-                    i: {'label': time_positions_for_slider[i].strftime('%d.%m'), 'style': {'white-space': 'nowrap'}}
-                    for i in range(0, len(time_positions_for_slider), 12)
-                    },
-                step=1,
-                pushable=1,
-                allowCross=False
-            ),
-        ],
-        className='plot-outer-container',
+        ], className='plot-outer-container'
         ),
-        html.Details([
-            html.Summary('More info'),
-            html.Pre(info_acoustic_spectra, style={'white-space': 'pre-wrap'})
-        ],
-        className='details-container',
+        html.Div(id='time-slider-info'), # Will be updated by slider 
+        dcc.RangeSlider( # Slider
+            id='time-slider',
+            min=0,
+            max=len(time_positions_for_slider)-1,
+            value=[range_start_idx, range_end_idx],
+            marks={
+                i: {'label': time_positions_for_slider[i].strftime('%d.%m'), 'style': {'white-space': 'nowrap'}}
+                for i in range(0, len(time_positions_for_slider), 12)
+            },
+            step=1,
+            allowCross=True
         ),
         html.Div([
-            dcc.Graph( # Will be updated by slider 
+            dcc.Graph(
                 id='TH-plot',
-                className='plot-container',
+                className='plot-outer-container',
                 config={
                     'scrollZoom': False,
                     'doubleClick': 'reset+autosize',
-                    'modeBarButtonsToRemove': ['lasso2d', 'pan2d']
-                    }
+                    'modeBarButtonsToRemove': ['lasso2d']
+                }
             ),
-        ],
-        className='plot-outer-container',
+        ],  className='plot-outer-container'
         ),
+        
+        # Distance Plot Section
+        html.Div([
+            html.Div([
+                html.Div('Beehive acoustic similarity', className='plot-title'),
+                dcc.Dropdown(
+                    id='sensor-image-selector',
+                    options=[
+                        {'label': f'Sensor {sensor}', 'value': str(sensor)}
+                        for sensor in sensors
+                    ],
+                    value=str(sensors[0]),
+                    style={'width': '200px'}
+                )
+            ],
+                     style={'display': 'flex', 'justifyContent': 'space-between', 'margin': '20px auto'}
+                     ),
+                html.Img(
+                    id='distance-plot-image',
+                    className='image-container'
+                )
+        ]),
+        
+        # All Info Sections at the bottom
         html.Details([
-            html.Summary('More info'),
-            html.Pre(info_th_diagramm, style={'white-space': 'pre-wrap'})
-        ],
-         className='details-container',
-        ),
+            html.Summary('More info about acoustic spectra'),
+            html.Pre(info_acoustic_spectra, style={'white-space': 'pre-wrap'})
+        ]),
+        html.Details([
+            html.Summary('More info about temperature-humidity diagram'),
+            html.Pre(info_th_diagram, style={'white-space': 'pre-wrap'})
+        ]),
+        html.Details([
+            html.Summary('More info about distance plots'),
+            html.Pre(info_distance, style={'white-space': 'pre-wrap'})
+        ]),
+        html.Details([
+            html.Summary('More info about datapoints'),
+            html.Pre(info_datapoints, style={'white-space': 'pre-wrap'})
+        ]),
         ],
         className='main-container')
     
@@ -214,12 +235,12 @@ def create_app(dataset):
         Input('time-slider', 'value'),
     )
     def update_time_info(time_range):
-        ts0 = time_positions_for_slider[time_range[0]]
-        ts1 = time_positions_for_slider[time_range[1]]
+        t0 = time_positions_for_slider[time_range[0]]
+        t1 = time_positions_for_slider[time_range[1]]
         return html.Div([
             html.Div(f'Time range selected:'),
-            html.Div(f'From: {ts0}'),
-            html.Div(f'To:\u00A0\u00A0\u00A0{ts1}')
+            html.Div(f'From: {t0}'),
+            html.Div(f'To:\u00A0\u00A0\u00A0{t1}')
         ], style={'font-family': 'monospace'})
 
     @app.callback(
@@ -227,18 +248,35 @@ def create_app(dataset):
         Input('time-slider', 'value')
     )
     def update_spectra(time_range):
-        start_time = time_positions_for_slider[int(time_range[0])]
-        end_time = time_positions_for_slider[int(time_range[1])]
-        return plot_acoustic_spectra(dataset, start_time, end_time)
+        t0 = time_positions_for_slider[int(time_range[0])]
+        t1 = time_positions_for_slider[int(time_range[1])]
+        logging.info(f"Loading acoustic spectra for timerange:\n   FROM: {t0}\n   TO:   {t1}")
+        return plot_acoustic_spectra(dataset, t0, t1)
 
     @app.callback(
         Output('TH-plot', 'figure'),
         Input('time-slider', 'value')
     )
     def update_TH_plot(time_range):
-        start_time = time_positions_for_slider[int(time_range[0])]
-        end_time = time_positions_for_slider[int(time_range[1])]
-        return plot_temperature_humidity(dataset, start_time, end_time)
+        t0 = time_positions_for_slider[int(time_range[0])]
+        t1 = time_positions_for_slider[int(time_range[1])]
+        logging.info(f"Loading temperature-humidity diagram for timerange:\n   FROM: {t0}\n   TO:   {t1}")
+        return plot_temperature_humidity(dataset, t0, t1)
+
+    @app.callback(
+        Output('distance-plot-image', 'src'),
+        Input('sensor-image-selector', 'value')
+    )
+    def update_image(sensor):
+        if not sensor:
+            sensor = str(sensors[0])
+        image_path = Path(OUTPUT_DIR) / f'similarity-measures-sensor-{sensor}.png'
+        if image_path.exists():
+            logging.info(f"Loading existing image: {image_path}")
+            return str(image_path)
+        else:
+            logging.info(f"Image does not exist: {image_path}")
+            return str(image_path)
 
     logging.info(f"Dash App was created!")
     return app
@@ -255,6 +293,13 @@ if __name__ == "__main__":
     sensors = [20, 21, 46, 109]
     csv_files = download_csv_if_needed(sensors, HELSINKI_4DAYS_AGO, HELSINKI_NOW, DATA_DIR) 
     dataset = load_dataset(csv_files)
+    
+    mpl_plot_pathnames = [(Path(OUTPUT_DIR) / f'similarity-measures-sensor-{sensor}.png') for sensor in sensors]
+    mpl_plots_exist = all([p.exists() for p in mpl_plot_pathnames])
+    if not mpl_plots_exist:
+        correlations = plot_similarity(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW, OUTPUT_DIR)
+    else:
+        logging.info(f"All similarity plots already exist.")
     
     app = create_app(dataset)
     app.run_server(debug=True)

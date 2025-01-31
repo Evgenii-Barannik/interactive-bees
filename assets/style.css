@@ -1,19 +1,15 @@
 /* Style for plot itself only*/
-.plot-container {
-    aspect-ratio: 1.333;
-    min-height: 0;
-    flex: 1;
-}
-
 .plot-outer-container {
-    max-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    aspect-ratio: 1.333;
+    max-height: 85vh;
+    width: 100%;
 }
 
-.details-container {
+.image-container {
+    display: flex;
+    width: 100%;
 }
 
 .main-container {
-    width: 98vw;
+    width: 96vw;
 }

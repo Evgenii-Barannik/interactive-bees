@@ -15,12 +15,31 @@ def get_non_nan_spectrum(spectrum):
     assert np.any(~np.isnan(spectrum)), "Array contains only NaN values."
     return spectrum[~np.isnan(spectrum)]
 
-def get_info_about_datapoints(filtered_dataset):
+def get_info_about_filtered_datapoints(filtered_dataset):
     num_of_datapoints = filtered_dataset['datetime'].shape[-1]
-    start_time = str(filtered_dataset['datetime'].values[0].astimezone(HELSINKI_TZ))
-    end_time = str(filtered_dataset['datetime'].values[-1].astimezone(HELSINKI_TZ))
-    text_for_legend = f"First datapoint: {start_time}\nLast datapoint: {end_time}\nNumber of datapoints: {num_of_datapoints}\n" 
+    start_time_str = str(filtered_dataset['datetime'].values[0].astimezone(HELSINKI_TZ))
+    end_time_str = str(filtered_dataset['datetime'].values[-1].astimezone(HELSINKI_TZ))
+    text_for_legend = f"First datapoint: {start_time_str}\nLast datapoint: {end_time_str}\nNumber of datapoints: {num_of_datapoints}\n" 
     return text_for_legend
+
+def get_info_about_all_datapoints(ds):
+    text = ""
+    for sensor_id in ds["sensor"].values:
+        filtered = ds.sel(sensor=sensor_id).where(
+                ds.sel(sensor=sensor_id)['base'].notnull(),
+                drop=True
+        )
+        if filtered['datetime'].shape[0] > 0:
+            num_of_datapoints = filtered['datetime'].shape[-1]
+            start_time = str(filtered['datetime'].values[0].astimezone(HELSINKI_TZ))
+            end_time = str(filtered['datetime'].values[-1].astimezone(HELSINKI_TZ))
+            transient_text = f"""For sensor {sensor_id}:
+First datapoint: {start_time}
+Last datapoint: {end_time}
+Number of datapoints: {num_of_datapoints}\n
+""" 
+            text += transient_text
+    return text
 
 # My CICD for images
 def show_image(image_name):
@@ -46,12 +65,12 @@ def download_csv_if_needed(sensors, datetime_start, datetime_end, dir_to_save_cs
                 with open(pathname, 'wb') as file:
                     file.write(response.content)
                 downloaded_csvs.append(pathname)           
-                logging.info(f"CSV file for sensor {sensor} is saved as {pathname}")
+                logging.info(f"CSV file downloaded and saved: {pathname}")
             else:
                 logging.info(f"Failed to download CSV file for sensor {sensor}. Status code: {response.status_code}")
         else:
             downloaded_csvs.append(pathname)           
-            logging.info(f"CSV file for sensor {sensor} is already at {pathname}")
+            logging.info(f"CSV file already exists: {pathname}")
     return downloaded_csvs
 
 def get_max_spectrum_len(files_to_load):
@@ -149,7 +168,10 @@ def load_dataset(files_to_load):
 
     logging.info("Type used for DateTime: {}".format(type(dataset["datetime"].values[0])))
     logging.info("Memory used for dataset: {:.3f} MB".format(dataset.nbytes / (1024**2)))
-    logging.info("Last DateTime: {}\n".format(max(dataset["datetime"].values).astimezone(HELSINKI_TZ)))
+    logging.info("First DateTime: {}".format(max(dataset["datetime"].values)))
+    logging.info("Last DateTime:  {}".format(max(dataset["datetime"].values)))
+    logging.info("First DateTime in Helsinki TZ: {}".format(max(dataset["datetime"].values).astimezone(HELSINKI_TZ)))
+    logging.info("Last DateTime in Helsinki TZ:  {}\n".format(max(dataset["datetime"].values).astimezone(HELSINKI_TZ)))
     return dataset
 
 if __name__ == "__main__":
@@ -164,3 +186,4 @@ if __name__ == "__main__":
     sensors_test = [20, 21, 109]
     files_test = download_csv_if_needed(sensors_test, HELSINKI_NOW, HELSINKI_NOW, DATA_DIR)
     dataset_test = load_dataset(files_test)
+    logging.info(get_info_about_all_datapoints(dataset_test))

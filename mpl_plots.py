@@ -8,7 +8,6 @@ import copy
 import os
 from datetime import datetime
 from matplotlib.ticker import FuncFormatter
-from zoneinfo import ZoneInfo
 
 from preprocessing import *
 from constants import *
@@ -69,18 +68,9 @@ def get_ticks_between(start, end):
         ticks.append(moving)
     return ticks
 
-def plot_similarity(ds, start, end, output_path):
+def plot_similarity(ds, start, end, output_path, name_overide = None):
     assert start < end
-    utc_tz = ZoneInfo('UTC')
-    full_annotation = ""
-    intro_for_annotation = """
-    These plots show if acoustic spectra obtained at different points of time are similar. The horizontal axis shows time when one spectrum was obtained, the vertical axis shows when the other spectrum was obtained. The larger the distance, the greater is the difference. The distance here is similar to the distance between points on a geographical map. Four different metrics represent four ways of calculating the distance. The simplest of them is the Euclidean distance, which is calculated using the Pythagorean theorem, but in a multidimensional space. As you see, the main diagonal is always blue, indicating zero distance. This happens because main diagonal shows the results of comparing spectra with themself. For any true metric, the distance between something and itself must be zero: Distance(A, A) = 0.<br><br>
-
-    Also, each plot is symmetric with respect to the main diagonal — you can place a mirror along the blue line and recreate the second half. This happens because the Distance(A, B) will correspond to Distance(B, A) after reflection. For any true metric, the distance between one_thing and another_thing must be equal to the distance between another_thing and one_thing: Distance(A, B) = Distance(B, A).<br><br>
-
-    So, what can we see in these plots? One should look for a patterns. A periodic pattern in the image will indicate periodicity of the signal over time. If pattern in the image nearly reproduces itself when shifted horizontally or vertically by 24 hours, it reveals the daily periodicity of signal.<br><br>
-    """
-    distance_images = []
+    images = []
     for sensor in ds["sensor"].values:
         filtered_dataset = ds.sel(sensor=sensor).where(
                 ds.sel(sensor=sensor)['base'].notnull() &
@@ -89,9 +79,9 @@ def plot_similarity(ds, start, end, output_path):
                 drop=True
         )
 
-        measurment_datetimes = filtered_dataset['datetime'].values
-        end = pd.to_datetime(end.replace(microsecond=0).astimezone(utc_tz).isoformat()) # Shadowing
-        all_datetimes = np.append(measurment_datetimes, end)
+        measurement_datetimes = filtered_dataset['datetime'].values
+        end = pd.to_datetime(end.replace(microsecond=0).astimezone(UTC_TZ).isoformat()) # Shadowing
+        all_datetimes = np.append(measurement_datetimes, end)
         unix_epochs = np.array([t.timestamp() for t in all_datetimes]) # Unix/Posix epochs (counted from UTC)
         
         # Find edges for 1D Voronoi tesselation
@@ -134,7 +124,7 @@ def plot_similarity(ds, start, end, output_path):
         # Data is ploted using unix epochs
         # Ticks are set using unix epochs
         # Tick labels show datetimes in Helsinki timezone
-        datetimes_for_ticks = get_ticks_between(start, end) # Datetimes in UTC or Helsinki time (depends on input)
+        datetimes_for_ticks = get_ticks_between(start, end) 
         epochs_for_ticks = [x.timestamp() for x in datetimes_for_ticks] # Unix epochs
 
         # Settings for Axes
@@ -148,27 +138,28 @@ def plot_similarity(ds, start, end, output_path):
             ax.yaxis.set_major_formatter(formatter)
             for label in ax.get_xticklabels(which='major'):
                 label.set(rotation=30, ha='right')
-            for epoch in np.array([t.timestamp() for t in measurment_datetimes]): # Dots for timestamps
+            for epoch in np.array([t.timestamp() for t in measurement_datetimes]): # Dots for timestamps
                 ax.scatter(epoch, epoch, color='black', s=0.5)
 
-        annotation_to_place_on_plot = "Similarity measures for signal from sensor {}:\n{}".format(sensor, get_info_about_datapoints(filtered_dataset))
+        annotation_to_place_on_plot = "Similarity measures for signal from sensor {}:\n{}".format(
+                sensor,
+                get_info_about_filtered_datapoints(filtered_dataset)
+        )
         fig.text(0.6, 0.88, annotation_to_place_on_plot, ha='right', fontsize=14)
         plt.tight_layout(pad=2.5)
         fig.subplots_adjust(top=0.88)
 
-        img_pathname = os.path.join(output_path, f"distance-measures-sensor-{sensor}.png")
-        distance_images.append(img_pathname) 
+        if name_overide:
+            img_pathname = os.path.join(output_path, name_overide)
+        else:
+            img_pathname = os.path.join(output_path, f"similarity-measures-sensor-{sensor}.png")
+
+        images.append(img_pathname) 
         os.makedirs(output_path, exist_ok=True)
         plt.savefig(img_pathname, dpi=300)
         plt.close()
         logging.info(f"PNG file {img_pathname} was created!")
-        full_annotation = full_annotation + f"For sensor {sensor}:<br>" + get_info_about_datapoints(filtered_dataset) + "<br>"
-
-    full_annotation = intro_for_annotation + full_annotation.replace('\n', '<br>')
-    with open(SIMILARITY_INFO_PATHNAME, 'w') as file:
-        file.write(full_annotation)
-    logging.info(f"HTML file {SIMILARITY_INFO_PATHNAME} was created!")
-    return distance_images, full_annotation
+    return images
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -185,5 +176,5 @@ if __name__ == "__main__":
     sensors = [21]
     csv_files = download_csv_if_needed(sensors, helsinki_start, helsinki_end, DATA_DIR) 
     dataset = load_dataset(csv_files)
-    correlations, _ = plot_similarity(dataset, helsinki_start, helsinki_end, OUTPUT_DIR)
+    correlations = plot_similarity(dataset, helsinki_start, helsinki_end, OUTPUT_DIR, "similarity_example.png")
     show_image(correlations[0])
