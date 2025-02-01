@@ -8,7 +8,7 @@ import copy
 import os
 from datetime import datetime
 from matplotlib.ticker import FuncFormatter
-
+import matplotlib as mpl
 from preprocessing import *
 from constants import *
 
@@ -57,45 +57,82 @@ def format_time_to_helsinki(x, _):
     dt = datetime.fromtimestamp(x, tz=HELSINKI_TZ) # Timestamps are converted to Helsinki timezone
     return dt.strftime('%H:%M %d')
 
-def get_ticks_between(start, end):
+def get_ticks_Helsinki_time(start, end, step_hours):
+    start = start.astimezone(HELSINKI_TZ)
+    end = end.astimezone(HELSINKI_TZ)
     assert start < end
     midnight_before_start = start.replace(hour=0, minute=0, second=0, microsecond=0) 
     midnight_after_end = end.replace(hour=0, minute=0, second=0, microsecond=0) + pd.Timedelta(days=1)
     ticks = [copy.deepcopy(midnight_before_start)]
     moving = midnight_before_start
     while (moving < midnight_after_end):
-        moving = moving + pd.Timedelta(hours=12)
+        moving = moving + pd.Timedelta(hours=step_hours)
         ticks.append(moving)
     return ticks
 
+
+def get_datatpoints_in_range_with_extension(ds, sensor, start, end):
+    filtered_by_sensor = ds.sel(sensor=sensor).where(
+        ds.sel(sensor=sensor)['base'].notnull(),
+        drop = True
+    )
+
+    datetimes_before_start = filtered_by_sensor.where(
+        (filtered_by_sensor['datetime'] <= start), 
+        drop = True
+    )['datetime'].values
+    extension_datetime = max(datetimes_before_start)
+
+    filtered_by_time = filtered_by_sensor.where(
+        (filtered_by_sensor['datetime'] <= end) &
+        ( 
+            (filtered_by_sensor['datetime'] >= start) |
+            (filtered_by_sensor['datetime'] == extension_datetime)
+        ),
+        drop = True
+    )
+    return filtered_by_time
+    
 def plot_similarity(ds, start, end, output_path, name_overide = None):
+    logging.info(f"Plotting similarity with requested input range\nSTART:   {start}\nEND:     {end}")
     assert start < end
     images = []
     for sensor in ds["sensor"].values:
-        filtered_dataset = ds.sel(sensor=sensor).where(
-                ds.sel(sensor=sensor)['base'].notnull() &
-                (ds['datetime'] >= start) &
-                (ds['datetime'] <= end),
-                drop=True
-        )
+        ### Spectrum for extension datapoint (last point before start) does not matter, it will not influence plot.
+        ## But its datetime will be used to construct leftmost Voronoi endge
+        extended_filtered_ds = get_datatpoints_in_range_with_extension(ds, sensor, start, end)
+        if extended_filtered_ds['datetime'].shape[0] == 0:
+            continue
+        extended_measurement_datetimes = np.array([dt.astimezone(HELSINKI_TZ) for dt in extended_filtered_ds['datetime'].values])
+        assert extended_measurement_datetimes[0] < start 
 
-        measurement_datetimes = filtered_dataset['datetime'].values
-        end = pd.to_datetime(end.replace(microsecond=0).astimezone(UTC_TZ).isoformat()) # Shadowing
-        all_datetimes = np.append(measurement_datetimes, end)
-        unix_epochs = np.array([t.timestamp() for t in all_datetimes]) # Unix/Posix epochs (counted from UTC)
-        
-        # Find edges for 1D Voronoi tesselation
+        logging.info(f"\nFor sensor {sensor}:\nExtended datetime:   {extended_measurement_datetimes[0]}")
+        logging.info(f"Plot will show from: {extended_measurement_datetimes[0]}\nPlot will show to:   {end}")
+        unix_epochs= np.array([t.timestamp() for t in extended_measurement_datetimes]) # Unix/Posix epochs (counted from UTC)
         voronoi_edges = (unix_epochs[:-1] + unix_epochs[1:]) / 2
-        leftmost_edge  = unix_epochs[0] - (unix_epochs[1] - unix_epochs[0]) / 2
         voronoi_edges_extended = np.concatenate([
-            [leftmost_edge],
             voronoi_edges,
+            [end.timestamp()]
         ])
         x_edges = voronoi_edges_extended
         y_edges = voronoi_edges_extended
 
+        leftmost_edge = pd.to_datetime(voronoi_edges_extended[0], unit='s', utc=True).tz_convert('Europe/Helsinki')
+        rightmost_edge = pd.to_datetime(voronoi_edges_extended[-1], unit='s', utc=True).tz_convert('Europe/Helsinki')
+        logging.info(f"Voronoi edges from:  {leftmost_edge}\nVoronoi edges to:    {rightmost_edge}")
+        
+        filtered_ds = extended_filtered_ds.where (
+            (extended_filtered_ds['datetime'] > start),
+            drop = True
+        )
+        measurement_datetimes = np.array([dt.astimezone(HELSINKI_TZ) for dt in filtered_ds['datetime'].values])
+        logging.info(f"First datapoints:    {min(measurement_datetimes)}")
+        logging.info(f"Last datapoint:      {max(measurement_datetimes)}")
+        num_of_datapoints = len(measurement_datetimes)
+        logging.info(f"Num of datapoints: {num_of_datapoints}")
+
         # Compute distances, will be used to color Voronoi cells
-        spectra = filtered_dataset['spectrum'].values
+        spectra = filtered_ds['spectrum'].values
         spectra = strip_nan_columns(spectra)
 
         pearson_matrix = calculate_pearson_distance(spectra)
@@ -104,7 +141,7 @@ def plot_similarity(ds, start, end, output_path, name_overide = None):
         euclidean_matrix = calculate_euclidean_distance(spectra)
 
         fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-        colormap = get_portland_colormap()
+        colormap = mpl.colormaps["coolwarm"] 
         im1 = axes[0, 0].pcolormesh(x_edges, y_edges, pearson_matrix, cmap=colormap, shading="auto", vmin=0, vmax=1)
         axes[0, 0].set_title('Pearson distance')
         plt.colorbar(im1, ax=axes[0, 0]) 
@@ -124,7 +161,7 @@ def plot_similarity(ds, start, end, output_path, name_overide = None):
         # Data is ploted using unix epochs
         # Ticks are set using unix epochs
         # Tick labels show datetimes in Helsinki timezone
-        datetimes_for_ticks = get_ticks_between(start, end) 
+        datetimes_for_ticks = get_ticks_Helsinki_time(start, end, 12) 
         epochs_for_ticks = [x.timestamp() for x in datetimes_for_ticks] # Unix epochs
 
         # Settings for Axes
@@ -139,11 +176,11 @@ def plot_similarity(ds, start, end, output_path, name_overide = None):
             for label in ax.get_xticklabels(which='major'):
                 label.set(rotation=30, ha='right')
             for epoch in np.array([t.timestamp() for t in measurement_datetimes]): # Dots for timestamps
-                ax.scatter(epoch, epoch, color='black', s=0.5)
+                ax.scatter(epoch, epoch, color='black', s=1)
 
         annotation_to_place_on_plot = "Similarity measures for signal from sensor {}:\n{}".format(
                 sensor,
-                get_info_about_filtered_datapoints(filtered_dataset)
+                get_info_about_filtered_datapoints(filtered_ds)
         )
         fig.text(0.6, 0.88, annotation_to_place_on_plot, ha='right', fontsize=14)
         plt.tight_layout(pad=2.5)
@@ -170,11 +207,23 @@ if __name__ == "__main__":
         ]
     )
 
-    helsinki_start = datetime(2024, 8, 11, tzinfo = HELSINKI_TZ)
-    helsinki_end = datetime(2024, 8, 15, tzinfo = HELSINKI_TZ)
+    helsinki_start = datetime(2024, 8, 11, 0, tzinfo = HELSINKI_TZ)
+    helsinki_end = datetime(2024, 8, 14, 0, 0, tzinfo = HELSINKI_TZ)
 
+    # We define time at Helsinki, but BD uses UTC_TZ, so we transform to UTC before dowloading
     sensors = [21]
-    csv_files = download_csv_if_needed(sensors, helsinki_start, helsinki_end, DATA_DIR) 
+    csv_files = download_csv_if_needed(
+            sensors,
+            helsinki_start.astimezone(UTC_TZ),
+            helsinki_end.astimezone(UTC_TZ),
+            DATA_DIR
+    )
     dataset = load_dataset(csv_files)
-    correlations = plot_similarity(dataset, helsinki_start, helsinki_end, OUTPUT_DIR, "similarity_example.png")
+    correlations = plot_similarity(
+            dataset,
+            helsinki_start,
+            helsinki_end,
+            OUTPUT_DIR,
+            "similarity_example.png"
+    )
     show_image(correlations[0])

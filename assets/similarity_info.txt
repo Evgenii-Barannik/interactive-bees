@@ -3,3 +3,5 @@ These plots show if acoustic spectra obtained at different points of time are si
 Also, each plot is symmetric with respect to the main diagonal — you can place a mirror along the blue line and recreate the second half. This happens because the Distance(A, B) will correspond to Distance(B, A) after reflection. For any true metric, the distance between one_thing and another_thing must be equal to the distance between another_thing and one_thing: Distance(A, B) = Distance(B, A).
 
 So, what can we see in these plots? One should look for a patterns. A periodic pattern in the image will indicate periodicity of the signal over time. If pattern in the image nearly reproduces itself when shifted horizontally or vertically by 24 hours, it reveals the daily periodicity of signal.
+
+Keep in mind that scale can change for different subplots.
