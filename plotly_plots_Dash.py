@@ -13,15 +13,6 @@ def normalize_spectrum(arr):
     assert max_val != 0
     return 100 * arr / max_val
 
-# def filter(ds, sensor, start, end):
-#     filtered_dataset = ds.sel(sensor=sensor).where(
-#             (ds.sel(sensor=sensor)['base'].notnull()) &
-#             (ds['datetime'] >= start) &
-#             (ds['datetime'] <= end),
-#             drop=True
-#     )
-#     return filtered_dataset
-#
 def plot_acoustic_spectra(dataset, start, end):
     fig = go.Figure()
     all_sensors = dataset["sensor"].values
