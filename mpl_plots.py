@@ -34,9 +34,16 @@ def calculate_pearson_distance(spectra):
     distance_matrix = squareform(distances)
     return distance_matrix
 
-def calculate_cosine_distance(spectra):
-    distances = pdist(spectra, metric='cosine')
-    distance_matrix = squareform(distances)
+def calculate_fisher_information_metric(spectra):
+    num_spectra = spectra.shape[0]
+    distance_matrix = np.zeros((num_spectra, num_spectra))
+    for i in range(num_spectra):
+        for j in range(i, num_spectra):
+            spectrum_i = spectra[i] / np.sum(spectra[i])
+            spectrum_j = spectra[j] / np.sum(spectra[j])
+            fisher_distance = np.sqrt(np.sum((np.sqrt(spectrum_i) - np.sqrt(spectrum_j)) ** 2))
+            distance_matrix[i, j] = fisher_distance
+            distance_matrix[j, i] = fisher_distance 
     return distance_matrix
 
 def calculate_angular_distance(spectra):
@@ -156,13 +163,13 @@ def plot_similarity(ds, start, end, output_path, name_overide = None):
         spectra = strip_nan_columns(spectra)
 
         pearson_matrix = calculate_pearson_distance(spectra)
-        cosine_matrix = calculate_cosine_distance(spectra)
+        fisher_matrix = calculate_fisher_information_metric(spectra)
         angular_matrix = calculate_angular_distance(spectra)
         euclidean_matrix = calculate_euclidean_distance(spectra)
 
         fig, axes = plt.subplots(2, 2, figsize=(12, 10))
         colormap = mpl.colormaps["coolwarm"] 
-        im1 = axes[0, 0].pcolormesh(x_edges, y_edges, pearson_matrix, cmap=colormap, shading="auto", vmin=0, vmax=1)
+        im1 = axes[0, 0].pcolormesh(x_edges, y_edges, pearson_matrix, cmap=colormap, shading="auto")
         axes[0, 0].set_title('Pearson distance')
         plt.colorbar(im1, ax=axes[0, 0]) 
 
@@ -170,12 +177,12 @@ def plot_similarity(ds, start, end, output_path, name_overide = None):
         axes[0, 1].set_title('Euclidean distance')
         plt.colorbar(im2, ax=axes[0, 1]) 
 
-        im3 = axes[1, 0].pcolormesh(x_edges, y_edges, angular_matrix, cmap=colormap, shading="auto", vmin=0, vmax=1)
+        im3 = axes[1, 0].pcolormesh(x_edges, y_edges, angular_matrix, cmap=colormap, shading="auto")
         axes[1, 0].set_title('Angular distance')
         plt.colorbar(im3, ax=axes[1, 0])
 
-        im4 = axes[1, 1].pcolormesh(x_edges, y_edges, cosine_matrix, cmap=colormap, shading="auto", vmin=0, vmax=1)
-        axes[1, 1].set_title('Cosine distance')
+        im4 = axes[1, 1].pcolormesh(x_edges, y_edges, fisher_matrix, cmap=colormap, shading="auto")
+        axes[1, 1].set_title('Fisher distance')
         plt.colorbar(im4, ax=axes[1, 1])
 
         # Data is ploted using unix epochs

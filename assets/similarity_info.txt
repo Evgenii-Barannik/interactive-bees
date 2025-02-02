@@ -4,4 +4,4 @@ Also, each plot is symmetric with respect to the main diagonal — you can place
 
 So, what can we see in these plots? One should look for a patterns. A periodic pattern in the image will indicate periodicity of the signal over time. If pattern in the image nearly reproduces itself when shifted horizontally or vertically by 24 hours, it reveals the daily periodicity of signal.
 
-Keep in mind that scale can change for different subplots.
+Keep in mind that scale can be different for different subplots.
