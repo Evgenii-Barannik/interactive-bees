@@ -1,4 +1,4 @@
-name: interactive_bees
+name: bees
 channels:
   - defaults
 dependencies:
@@ -9,4 +9,6 @@ dependencies:
   - scipy=1.14.1
   - xarray=2023.6.0
   - plotly
-  - dash
+  - pip
+  - pip:
+    - jinja2

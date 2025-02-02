@@ -6,7 +6,6 @@ import requests
 import pandas as pd
 import logging
 import math
-from zoneinfo import ZoneInfo
 
 from constants import * 
 
@@ -187,7 +186,7 @@ if __name__ == "__main__":
         ]
     )
 
-    sensors_test = [20, 21, 109]
+    sensors_test = [20, 21, 46, 109]
     files_test = download_csv_if_needed(
             sensors_test,
             HELSINKI_4DAYS_AGO.astimezone(UTC_TZ),

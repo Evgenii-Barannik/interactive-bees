@@ -2,6 +2,10 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 import logging
+import os
+import webbrowser
+from pathlib import Path
+import plotly.express as px
 
 from preprocessing import * 
 from mpl_plots import *
@@ -62,8 +66,12 @@ def plot_acoustic_spectra(dataset, start, end):
         selectionrevision=True,
         margin=dict(l=25, r=25, t=50, b=25)
     )
-    logging.info(f"Acoustic spectra plotted.")
-    return fig
+    rendered_html = fig.to_html(config={'responsive': True}, include_plotlyjs=True, full_html=False)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    with open(ACOUSTIC_SPECTRA_HTML, 'w') as file:
+        file.write(rendered_html)
+    logging.info(f"HTML file {ACOUSTIC_SPECTRA_HTML} was created!")
+    return rendered_html
 
 def plot_temperature_humidity(dataset, start, end):
     fig = go.Figure()
@@ -128,5 +136,35 @@ def plot_temperature_humidity(dataset, start, end):
         selectionrevision=True,
         margin=dict(l=25, r=25, t=50, b=25)
     )
-    logging.info(f"Temperature-Humidity diagram plotted.")
-    return fig
+
+    rendered_html = fig.to_html(config={'responsive': True}, include_plotlyjs=True, full_html=False)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    with open(TEMPERATURE_HUMIDIY_HTML, 'w') as file:
+        file.write(rendered_html)
+    logging.info(f"HTML file {TEMPERATURE_HUMIDIY_HTML} was created!")
+    return rendered_html
+
+if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(message)s",
+        handlers=[
+            logging.StreamHandler()  # Log to console
+        ]
+    )
+
+    sensors = [20, 21, 46, 109]
+    csv_files = download_csv_if_needed(
+            sensors,
+            HELSINKI_4DAYS_AGO.astimezone(UTC_TZ),
+            HELSINKI_NOW.astimezone(UTC_TZ),
+            DATA_DIR
+    ) 
+    dataset = load_dataset(csv_files)
+    acoustic_spectra_html = plot_acoustic_spectra(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW)
+    temperature_humidity_html = plot_temperature_humidity(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW)
+    with open(PLOTLY_COMBINED_HTML, 'w') as file:
+        file.write(acoustic_spectra_html + temperature_humidity_html)
+        logging.info(f"HTML file {PLOTLY_COMBINED_HTML} created")
+
+    webbrowser.open(Path(PLOTLY_COMBINED_HTML).absolute().as_uri())
