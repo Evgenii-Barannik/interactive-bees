@@ -1,22 +1,22 @@
-CSV file for sensor 20 is already at data/sensor_20_from_2025-01-23_to_2025-01-27.csv
-CSV file for sensor 21 is already at data/sensor_21_from_2025-01-23_to_2025-01-27.csv
-CSV file for sensor 46 is already at data/sensor_46_from_2025-01-23_to_2025-01-27.csv
-CSV file for sensor 109 is already at data/sensor_109_from_2025-01-23_to_2025-01-27.csv
+CSV file already exists: data/sensor_20_from_2025-01-28_to_2025-02-01.csv
+CSV file already exists: data/sensor_21_from_2025-01-28_to_2025-02-01.csv
+CSV file already exists: data/sensor_46_from_2025-01-28_to_2025-02-01.csv
+CSV file already exists: data/sensor_109_from_2025-01-28_to_2025-02-01.csv
 
 Dataset:
 <xarray.Dataset>
-Dimensions:                   (datetime: 429, sensor: 4, channel: 2028)
+Dimensions:                   (datetime: 341, sensor: 4, channel: 2028)
 Coordinates:
-  * datetime                  (datetime) object 2025-01-23T00:11:50+00:00 ......
+  * datetime                  (datetime) object 2025-01-28T00:10:31+00:00 ......
   * sensor                    (sensor) int64 20 21 46 109
   * channel                   (channel) int64 0 1 2 3 4 ... 2024 2025 2026 2027
 Data variables:
-    spectrum                  (datetime, sensor, channel) float64 8.595 ... 0...
+    spectrum                  (datetime, sensor, channel) float64 25.17 ... 0...
     sensor_type               (datetime, sensor) float64 0.0 nan ... nan 48.0
-    sensor_pack               (datetime, sensor) float64 4.012e+03 nan ... 77.0
-    base                      (datetime, sensor) float64 10.0 nan ... nan 110.0
-    temperature               (datetime, sensor) float64 1.92 nan ... nan 2.22
-    humidity                  (datetime, sensor) float64 58.44 nan ... nan 87.62
+    sensor_pack               (datetime, sensor) float64 4.132e+03 nan ... 182.0
+    base                      (datetime, sensor) float64 10.0 nan ... nan 114.0
+    temperature               (datetime, sensor) float64 5.15 nan ... nan 2.15
+    humidity                  (datetime, sensor) float64 67.68 nan ... nan 80.11
     spectrum_length           (datetime, sensor) float64 1.848e+03 ... 2.028e+03
     frequency_scaling_factor  (datetime, sensor) float64 0.4011 nan ... 0.7257
     frequency_min             (datetime, sensor) float64 80.22 nan ... nan 14.51
@@ -27,14 +27,66 @@ Spectra for sensor  21: (80.22- 821.05 Hz) (1848 bins) (2028 bins before NaN str
 Spectra for sensor  46: (80.22- 821.05 Hz) (1848 bins) (2028 bins before NaN stripping) 
 Spectra for sensor 109: (14.51-1485.49 Hz) (2028 bins) (2028 bins before NaN stripping) 
 Type used for DateTime: <class 'pandas._libs.tslibs.timestamps.Timestamp'>
-Memory used for dataset: 26.700 MB
-Last DateTime: 2025-01-28 00:42:58+02:00
+Memory used for dataset: 21.227 MB
+First DateTime in dataset (UTC TZ): 2025-01-28 00:10:31+00:00
+Last DateTime in dataset (UTC TZ):  2025-02-01 02:29:21+00:00
+First DateTime in dataset (Helsinki TZ): 2025-01-28 02:10:31+02:00
+Last DateTime in dataset (Helsinki TZ):  2025-02-01 04:29:21+02:00
 
-HTML file output/acoustic_spectra_plot.html was created!
-HTML file output/temperature_humidity_plot.html was created!
-PNG file output/distance-measures-sensor-20.png was created!
-PNG file output/distance-measures-sensor-21.png was created!
-PNG file output/distance-measures-sensor-46.png was created!
-PNG file output/distance-measures-sensor-109.png was created!
-HTML file output/similarity_info.html was created!
-HTML file created: index.html
+Plotting similarity with requested input range
+START:   2025-01-28 21:24:09.421425+02:00
+END:     2025-02-01 21:24:09.421425+02:00
+
+For sensor 20:
+Extended datetime:   2025-01-28 21:10:18+02:00
+Plot will show from: 2025-01-28 21:10:18+02:00
+Plot will show to:   2025-02-01 21:24:09.421425+02:00
+Voronoi edges from:  2025-01-28 21:40:18+02:00
+Voronoi edges to:    2025-02-01 21:24:09.421425104+02:00
+First datapoints:    2025-01-28 22:10:18+02:00
+Last datapoint:      2025-02-01 04:09:26+02:00
+Num of datapoints: 79
+PNG file assets/similarity-measures-sensor-20.png was created!
+
+For sensor 21:
+Extended datetime:   2025-01-28 20:30:13+02:00
+Plot will show from: 2025-01-28 20:30:13+02:00
+Plot will show to:   2025-02-01 21:24:09.421425+02:00
+Voronoi edges from:  2025-01-28 21:00:12.500000+02:00
+Voronoi edges to:    2025-02-01 21:24:09.421425104+02:00
+First datapoints:    2025-01-28 21:30:12+02:00
+Last datapoint:      2025-02-01 04:29:21+02:00
+Num of datapoints: 79
+PNG file assets/similarity-measures-sensor-21.png was created!
+
+For sensor 46:
+Extended datetime:   2025-01-28 14:43:08+02:00
+Plot will show from: 2025-01-28 14:43:08+02:00
+Plot will show to:   2025-02-01 21:24:09.421425+02:00
+Voronoi edges from:  2025-01-29 04:12:50.500000+02:00
+Voronoi edges to:    2025-02-01 21:24:09.421425104+02:00
+First datapoints:    2025-01-29 17:42:33+02:00
+Last datapoint:      2025-02-01 03:41:59+02:00
+Num of datapoints: 35
+PNG file assets/similarity-measures-sensor-46.png was created!
+
+For sensor 109:
+Extended datetime:   2025-01-28 21:20:47+02:00
+Plot will show from: 2025-01-28 21:20:47+02:00
+Plot will show to:   2025-02-01 21:24:09.421425+02:00
+Voronoi edges from:  2025-01-28 21:47:15+02:00
+Voronoi edges to:    2025-02-01 21:24:09.421425104+02:00
+First datapoints:    2025-01-28 22:13:43+02:00
+Last datapoint:      2025-02-01 03:58:29+02:00
+Num of datapoints: 76
+PNG file assets/similarity-measures-sensor-109.png was created!
+Dash App was created!
+Loading existing image: assets/similarity-measures-sensor-20.png
+Loading temperature-humidity diagram for timerange:
+   FROM: 2025-01-28 21:00:00+02:00
+   TO:   2025-02-01 21:00:00+02:00
+Loading acoustic spectra for timerange:
+   FROM: 2025-01-28 21:00:00+02:00
+   TO:   2025-02-01 21:00:00+02:00
+Temperature-Humidity diagram plotted.
+Acoustic spectra plotted.

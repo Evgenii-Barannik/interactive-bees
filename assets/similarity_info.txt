@@ -1,0 +1,7 @@
+These plots show if acoustic spectra obtained at different points of time are similar. The horizontal axis shows time when one spectrum was obtained, the vertical axis shows when the other spectrum was obtained. The larger the distance, the greater is the difference. The distance here is similar to the distance between points on a geographical map. Four different metrics represent four ways of calculating the distance. The simplest of them is the Euclidean distance, which is calculated using the Pythagorean theorem, but in a multidimensional space. As you see, the main diagonal is always blue, indicating zero distance. This happens because main diagonal shows the results of comparing spectra with themself. For any true metric, the distance between something and itself must be zero: Distance(A, A) = 0.
+
+Also, each plot is symmetric with respect to the main diagonal — you can place a mirror along the blue line and recreate the second half. This happens because the Distance(A, B) will correspond to Distance(B, A) after reflection. For any true metric, the distance between one_thing and another_thing must be equal to the distance between another_thing and one_thing: Distance(A, B) = Distance(B, A).
+
+So, what can we see in these plots? One should look for a patterns. A periodic pattern in the image will indicate periodicity of the signal over time. If pattern in the image nearly reproduces itself when shifted horizontally or vertically by 24 hours, it reveals the daily periodicity of signal.
+
+Keep in mind that scale can change for different subplots.

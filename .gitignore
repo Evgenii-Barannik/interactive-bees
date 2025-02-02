@@ -1,5 +1,4 @@
-output/*
 data/*
 __pycache__/*
 index.html
-
+assets/similarity-measures-sensor-*.png

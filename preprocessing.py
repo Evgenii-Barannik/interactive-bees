@@ -8,19 +8,40 @@ import logging
 import math
 from zoneinfo import ZoneInfo
 
-from constants import *
+from constants import * 
 
 def get_non_nan_spectrum(spectrum):
     spectrum = np.asarray(spectrum)
     assert np.any(~np.isnan(spectrum)), "Array contains only NaN values."
     return spectrum[~np.isnan(spectrum)]
 
-def get_info_about_datapoints(filtered_dataset):
-    num_of_datapoints = filtered_dataset['datetime'].shape[-1]
-    start_time = str(filtered_dataset['datetime'].values[0].astimezone(HELSINKI_TZ))
-    end_time = str(filtered_dataset['datetime'].values[-1].astimezone(HELSINKI_TZ))
+def get_info_about_filtered_datapoints(filtered_dataset):
+    num_of_datapoints = filtered_dataset['datetime'].shape[0]
+    start_time = min(filtered_dataset['datetime'].values).astimezone(HELSINKI_TZ)
+    end_time = max(filtered_dataset['datetime'].values).astimezone(HELSINKI_TZ)
     text_for_legend = f"First datapoint: {start_time}\nLast datapoint: {end_time}\nNumber of datapoints: {num_of_datapoints}\n" 
     return text_for_legend
+
+def get_info_about_all_datapoints(ds, start, end):
+    text = ""
+    for sensor_id in ds["sensor"].values:
+        filtered_dataset = ds.sel(sensor=sensor_id).where(
+                (ds['datetime'] >= start) & 
+                (ds['datetime'] <= end) & 
+                ds.sel(sensor=sensor_id)['base'].notnull(),
+                drop=True
+        )
+        if filtered_dataset['datetime'].shape[0] > 0:
+            num_of_datapoints = filtered_dataset['datetime'].shape[0]
+            start_time = min(filtered_dataset['datetime'].values).astimezone(HELSINKI_TZ)
+            end_time = max(filtered_dataset['datetime'].values).astimezone(HELSINKI_TZ)
+            transient_text = f"""For sensor {sensor_id}:
+First datapoint: {start_time}
+Last datapoint: {end_time}
+Number of datapoints: {num_of_datapoints}\n
+""" 
+            text += transient_text
+    return text
 
 # My CICD for images
 def show_image(image_name):
@@ -28,12 +49,14 @@ def show_image(image_name):
     if os.path.exists(lyn_app_path):
         os.system(f'open -g -a {lyn_app_path} {image_name}')
 
-def download_csv_if_needed(sensors, datetime_start, datetime_end, dir_to_save_csv):
-    # Database stores datetimes as UTC, so we transform datetimes to UTC before using GET request
-    assert datetime_start <= datetime_end
-    utc_tz = ZoneInfo('UTC')
-    date_start = datetime_start.astimezone(utc_tz).strftime('%Y-%m-%d') 
-    date_end = datetime_end.astimezone(utc_tz).strftime('%Y-%m-%d') 
+def download_csv_if_needed(sensors, start_datetime_utc, end_datetime_utc, dir_to_save_csv):
+    # Database stores datetimes as UTC, so UTC datetimes are required for GET request
+    assert start_datetime_utc.tzinfo == UTC_TZ
+    assert end_datetime_utc.tzinfo == UTC_TZ
+
+    assert start_datetime_utc <= end_datetime_utc
+    date_start = start_datetime_utc.strftime('%Y-%m-%d') 
+    date_end = end_datetime_utc.strftime('%Y-%m-%d') 
     downloaded_csvs = []
     os.makedirs(dir_to_save_csv, exist_ok=True) 
     base_url = "http://apiologia.zymologia.fi/export/"
@@ -46,12 +69,12 @@ def download_csv_if_needed(sensors, datetime_start, datetime_end, dir_to_save_cs
                 with open(pathname, 'wb') as file:
                     file.write(response.content)
                 downloaded_csvs.append(pathname)           
-                logging.info(f"CSV file for sensor {sensor} is saved as {pathname}")
+                logging.info(f"CSV file downloaded and saved: {pathname}")
             else:
                 logging.info(f"Failed to download CSV file for sensor {sensor}. Status code: {response.status_code}")
         else:
             downloaded_csvs.append(pathname)           
-            logging.info(f"CSV file for sensor {sensor} is already at {pathname}")
+            logging.info(f"CSV file already exists: {pathname}")
     return downloaded_csvs
 
 def get_max_spectrum_len(files_to_load):
@@ -149,7 +172,10 @@ def load_dataset(files_to_load):
 
     logging.info("Type used for DateTime: {}".format(type(dataset["datetime"].values[0])))
     logging.info("Memory used for dataset: {:.3f} MB".format(dataset.nbytes / (1024**2)))
-    logging.info("Last DateTime: {}\n".format(max(dataset["datetime"].values).astimezone(HELSINKI_TZ)))
+    logging.info("First DateTime in dataset (UTC TZ): {}".format(min(dataset["datetime"].values).astimezone(UTC_TZ)))
+    logging.info("Last DateTime in dataset (UTC TZ):  {}".format(max(dataset["datetime"].values).astimezone(UTC_TZ)))
+    logging.info("First DateTime in dataset (Helsinki TZ): {}".format(min(dataset["datetime"].values).astimezone(HELSINKI_TZ)))
+    logging.info("Last DateTime in dataset (Helsinki TZ):  {}\n".format(max(dataset["datetime"].values).astimezone(HELSINKI_TZ)))
     return dataset
 
 if __name__ == "__main__":
@@ -162,5 +188,11 @@ if __name__ == "__main__":
     )
 
     sensors_test = [20, 21, 109]
-    files_test = download_csv_if_needed(sensors_test, HELSINKI_NOW, HELSINKI_NOW, DATA_DIR)
+    files_test = download_csv_if_needed(
+            sensors_test,
+            HELSINKI_4DAYS_AGO.astimezone(UTC_TZ),
+            HELSINKI_NOW.astimezone(UTC_TZ),
+            DATA_DIR
+    )
     dataset_test = load_dataset(files_test)
+    logging.info(get_info_about_all_datapoints(dataset_test, HELSINKI_4DAYS_AGO, HELSINKI_NOW))

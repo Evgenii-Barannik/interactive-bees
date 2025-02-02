@@ -1,0 +1,1 @@
+Each shown spectrum is created by averaging spectra from multiple datapoints and then normalizing the result.

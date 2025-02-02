@@ -1,0 +1,8 @@
+matplotlib==3.9.2
+pandas==2.1
+python==3.10.14 
+requests==2.31.0
+scipy==1.14.1
+xarray==2023.6.0
+plotly
+dash
