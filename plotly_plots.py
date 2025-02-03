@@ -25,11 +25,11 @@ def plot_acoustic_spectra(dataset, start, end):
     # Main spectra plot
     for i, sensor_id in enumerate(all_sensors):
         filtered_dataset = dataset.sel(sensor=sensor_id).where(
-                    dataset.sel(sensor=sensor_id)['base'].notnull() &
-                    (dataset['datetime'] >= start) &
-                    (dataset['datetime'] <= end),
-                    drop=True
-            )
+            dataset.sel(sensor=sensor_id)['base'].notnull() &
+            (dataset['datetime'] >= start) &
+            (dataset['datetime'] <= end),
+            drop=True
+        )
         if filtered_dataset['datetime'].shape[0] == 0:
             continue
         averaged_spectrum = normalize_spectrum(
@@ -49,69 +49,21 @@ def plot_acoustic_spectra(dataset, start, end):
             line_shape='spline',
             hovertemplate='(%{y:.1f}%, %{x:.1f} Hz<extra></extra>)',
         ))
-
-        # Add time series for range selection
-        times = filtered_dataset['datetime'].values
-        fig.add_trace(
-            go.Scatter(
-                x=times,
-                y=[0] * len(times),
-                mode='markers',
-                marker=dict(
-                    color=colors[i], 
-                    size=4
-                ),
-                name=f'Sensor {sensor_id} times',
-                showlegend=False,
-                xaxis='x2',
-                yaxis='y2',
-                hovertemplate='%{x}<extra></extra>'
-            )
-        )
     
     fig.update_layout(
         title='Beehive acoustic spectra',
         xaxis=dict(
             title='Frequency, Hz',
             range=[0, 850],
-            # domain=[0, 1],
             tickfont=dict(size=10),
-            # automargin=False,
             tickangle=0,
-            # constrain='domain'
         ),
         yaxis=dict(
             title='Relative Amplitude, %',
             range=[0, 100],
-            # domain=[0.18, 1],
             tickfont=dict(size=10),
             automargin=False,
             tickangle=0,
-            # constrain='domain'
-        ),
-        # Subplots
-        xaxis2=dict(
-            title='Time',
-            rangeslider=dict(
-                visible=True,
-                thickness=0.05,
-            ),
-            type='date',
-            # domain=[0, 1],
-            anchor='y2',
-            tickfont=dict(size=8),
-            automargin=False,
-            tickangle=0,
-            constrain='domain',
-            scaleanchor='y2'
-        ),
-        yaxis2=dict(
-            domain=[0.02, 0.08],
-            anchor='x2',
-            visible=False,
-            # fixedrange=True,
-            # scaleanchor='x2',
-            # scaleratio=0.1
         ),
         hovermode='closest',
         dragmode='zoom',
@@ -130,6 +82,61 @@ def plot_acoustic_spectra(dataset, start, end):
     with open(ACOUSTIC_SPECTRA_HTML, 'w') as file:
         file.write(rendered_html)
     logging.info(f"HTML file {ACOUSTIC_SPECTRA_HTML} was created!")
+    return rendered_html
+
+def plot_time_slider(dataset, start, end):
+    fig = go.Figure()
+    all_sensors = dataset["sensor"].values
+    colors = px.colors.sample_colorscale("Portland", len(all_sensors))
+    
+    for i, sensor_id in enumerate(all_sensors):
+        filtered_dataset = dataset.sel(sensor=sensor_id).where(
+            dataset.sel(sensor=sensor_id)['base'].notnull() &
+            (dataset['datetime'] >= start) &
+            (dataset['datetime'] <= end),
+            drop=True
+        )
+        if filtered_dataset['datetime'].shape[0] == 0:
+            continue
+        times = filtered_dataset['datetime'].values
+        fig.add_trace(
+            go.Scatter(
+                x=times,
+                y=[0] * len(times),
+                mode='markers',
+                marker=dict(
+                    color=colors[i], 
+                    size=4
+                ),
+                hovertemplate='%{x}<extra></extra>'
+            )
+        )
+    
+    fig.update_layout(
+        title='Time range selection',
+        xaxis=dict(
+            type='date',
+            rangeslider=dict(
+                visible=True,
+                thickness=0.2,
+            ),
+            tickfont=dict(size=10),
+            tickangle=0,
+            automargin=False, # Fixes width changes when new tick label appears while sliding
+        ),
+        yaxis=dict(visible=False),
+        hovermode='closest',
+        dragmode='zoom',
+        showlegend=False,
+        height=200, 
+        margin=dict(l=25, r=25, t=50, b=25)
+    )
+    
+    rendered_html = fig.to_html(config={'responsive': True}, include_plotlyjs=True, full_html=False)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    with open(TIME_SLIDER_HTML, 'w') as file:
+        file.write(rendered_html)
+    logging.info(f"HTML file {TIME_SLIDER_HTML} was created!")
     return rendered_html
 
 def plot_temperature_humidity(dataset, start, end):
@@ -214,16 +221,21 @@ if __name__ == "__main__":
 
     sensors = [20, 21, 46, 109]
     csv_files = download_csv_if_needed(
-            sensors,
-            HELSINKI_4DAYS_AGO.astimezone(UTC_TZ),
-            HELSINKI_NOW.astimezone(UTC_TZ),
-            DATA_DIR
+        sensors,
+        HELSINKI_4DAYS_AGO.astimezone(UTC_TZ),
+        HELSINKI_NOW.astimezone(UTC_TZ),
+        DATA_DIR
     ) 
     dataset = load_dataset(csv_files)
+    
+    # Create three individual plots:
     acoustic_spectra_html = plot_acoustic_spectra(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW)
+    time_slider_html = plot_time_slider(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW)
     temperature_humidity_html = plot_temperature_humidity(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW)
+    
+    # Combine the three plots into a single HTML output
     with open(PLOTLY_COMBINED_HTML, 'w') as file:
-        file.write(acoustic_spectra_html + temperature_humidity_html)
+        file.write(acoustic_spectra_html + time_slider_html + temperature_humidity_html)
         logging.info(f"HTML file {PLOTLY_COMBINED_HTML} created")
 
     webbrowser.open(Path(PLOTLY_COMBINED_HTML).absolute().as_uri())

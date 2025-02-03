@@ -6,6 +6,7 @@ import os
 OUTPUT_DIR = "assets"
 DATA_DIR = "data"
 ACOUSTIC_SPECTRA_HTML = os.path.join(OUTPUT_DIR, "acoustic_spectra_plot.html")
+TIME_SLIDER_HTML = os.path.join(OUTPUT_DIR, "time_slider_plot.html")
 TEMPERATURE_HUMIDIY_HTML = os.path.join(OUTPUT_DIR, "temperature_humidity_plot.html")
 PLOTLY_COMBINED_HTML = os.path.join(OUTPUT_DIR, "plots.html")
 TEMPERATURE_HUMIDIY_INFO = os.path.join(OUTPUT_DIR, "temperature_humidity_info.txt")
