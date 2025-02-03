@@ -2,10 +2,6 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 import logging
-import os
-import webbrowser
-from pathlib import Path
-import plotly.express as px
 
 from preprocessing import * 
 from mpl_plots import *
@@ -22,7 +18,6 @@ def plot_acoustic_spectra(dataset, start, end):
     all_sensors = dataset["sensor"].values
     colors = px.colors.sample_colorscale("Portland", len(all_sensors))
     
-    # Main spectra plot
     for i, sensor_id in enumerate(all_sensors):
         filtered_dataset = dataset.sel(sensor=sensor_id).where(
                     dataset.sel(sensor=sensor_id)['base'].notnull() &
@@ -47,72 +42,15 @@ def plot_acoustic_spectra(dataset, start, end):
             marker_color=colors[i],
             opacity=0.7,
             line_shape='spline',
-            hovertemplate='(%{y:.1f}%, %{x:.1f} Hz<extra></extra>)',
+            hovertemplate='(%{y:.1f}%, %{x:.1f} Hz<extra></extra>)', #<extra></extra> removes sensor number(it is obvious anyway)
         ))
-
-        # Add time series for range selection
-        times = filtered_dataset['datetime'].values
-        fig.add_trace(
-            go.Scatter(
-                x=times,
-                y=[0] * len(times),
-                mode='markers',
-                marker=dict(
-                    color=colors[i], 
-                    size=4
-                ),
-                name=f'Sensor {sensor_id} times',
-                showlegend=False,
-                xaxis='x2',
-                yaxis='y2',
-                hovertemplate='%{x}<extra></extra>'
-            )
-        )
     
     fig.update_layout(
         title='Beehive acoustic spectra',
-        xaxis=dict(
-            title='Frequency, Hz',
-            range=[0, 850],
-            # domain=[0, 1],
-            tickfont=dict(size=10),
-            # automargin=False,
-            tickangle=0,
-            # constrain='domain'
-        ),
-        yaxis=dict(
-            title='Relative Amplitude, %',
-            range=[0, 100],
-            # domain=[0.18, 1],
-            tickfont=dict(size=10),
-            automargin=False,
-            tickangle=0,
-            # constrain='domain'
-        ),
-        # Subplots
-        xaxis2=dict(
-            title='Time',
-            rangeslider=dict(
-                visible=True,
-                thickness=0.05,
-            ),
-            type='date',
-            # domain=[0, 1],
-            anchor='y2',
-            tickfont=dict(size=8),
-            automargin=False,
-            tickangle=0,
-            constrain='domain',
-            scaleanchor='y2'
-        ),
-        yaxis2=dict(
-            domain=[0.02, 0.08],
-            anchor='x2',
-            visible=False,
-            # fixedrange=True,
-            # scaleanchor='x2',
-            # scaleratio=0.1
-        ),
+        xaxis_title='Frequency, Hz',
+        yaxis_title='Relative Amplitude, %',
+        xaxis_range=[0, 850],
+        yaxis_range=[0, 100],
         hovermode='closest',
         dragmode='zoom',
         legend=dict(
@@ -124,13 +62,8 @@ def plot_acoustic_spectra(dataset, start, end):
         selectionrevision=True,
         margin=dict(l=25, r=25, t=50, b=25)
     )
-    
-    rendered_html = fig.to_html(config={'responsive': True}, include_plotlyjs=True, full_html=False)
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    with open(ACOUSTIC_SPECTRA_HTML, 'w') as file:
-        file.write(rendered_html)
-    logging.info(f"HTML file {ACOUSTIC_SPECTRA_HTML} was created!")
-    return rendered_html
+    logging.info(f"Acoustic spectra plotted.")
+    return fig
 
 def plot_temperature_humidity(dataset, start, end):
     fig = go.Figure()
@@ -195,35 +128,5 @@ def plot_temperature_humidity(dataset, start, end):
         selectionrevision=True,
         margin=dict(l=25, r=25, t=50, b=25)
     )
-
-    rendered_html = fig.to_html(config={'responsive': True}, include_plotlyjs=True, full_html=False)
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    with open(TEMPERATURE_HUMIDIY_HTML, 'w') as file:
-        file.write(rendered_html)
-    logging.info(f"HTML file {TEMPERATURE_HUMIDIY_HTML} was created!")
-    return rendered_html
-
-if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(message)s",
-        handlers=[
-            logging.StreamHandler()  # Log to console
-        ]
-    )
-
-    sensors = [20, 21, 46, 109]
-    csv_files = download_csv_if_needed(
-            sensors,
-            HELSINKI_4DAYS_AGO.astimezone(UTC_TZ),
-            HELSINKI_NOW.astimezone(UTC_TZ),
-            DATA_DIR
-    ) 
-    dataset = load_dataset(csv_files)
-    acoustic_spectra_html = plot_acoustic_spectra(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW)
-    temperature_humidity_html = plot_temperature_humidity(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW)
-    with open(PLOTLY_COMBINED_HTML, 'w') as file:
-        file.write(acoustic_spectra_html + temperature_humidity_html)
-        logging.info(f"HTML file {PLOTLY_COMBINED_HTML} created")
-
-    webbrowser.open(Path(PLOTLY_COMBINED_HTML).absolute().as_uri())
+    logging.info(f"Temperature-Humidity diagram plotted.")
+    return fig
