@@ -2,78 +2,66 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-	.container {
-	    display: flex;
-	    justify-content: space-between;
-	    width: 90%;
-	}
-	select {
-	    font-size: 12px;
-	    padding: 5px;
-	    height: 35px;
-	}
+        .plotly-container {
+            aspect-ratio: 1.333;
+            max-height: 85vh;
+            width: 100%;
+        }
 
-	img {
-	    max-width: 100%;
-	    height: auto;
-	    margin-top: 20px;
-	    margin-bottom: 20px;
-	}
-	.plot-container {
-	    width: 98vw;
-	    aspect-ratio: 1.333;
-	    max-height: 95vh; 
-	    overflow: visible; 
-	}
-	details {
-	    margin: 1rem;
-	}
-	name {
-	    font-family: "Open Sans", verdana, arial, sans-serif;
-	    font-size: 17px;
-	    margin-left: 5%;
-	}
+        .image-container {
+            display: flex;
+            width: 100%;
+        }
+
+        .main-container {
+            width: 96vw;
+        }
     </style>
 </head>
-<body style="margin: 0;">
-    <div class="plot-container">
-	{{acoustic_spectra_plot}}
+<body class="main-container">
+    <div class="plotly-container">
+        {{acoustic_spectra_plot}}
     </div>
-    <details>
-	<summary>More info</summary>
-	{{acoustic_spectra_info}}
-    </details>
 
-    <div class="plot-container">
-	{{temperature_humidity_plot}}
+    <div class="plotly-container">
+        {{temperature_humidity_plot}}
     </div>
-    <details>
-	<summary>More info</summary>
-	{{temperature_humidity_info}}
-    </details>
+    
+    <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
+            <div>Beehive acoustic similarity</div>
+            <select id="imageSelectorDistance" style="width: 200px">
+                <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-20.png">Sensor 20</option>
+                <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-21.png">Sensor 21</option>
+                <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-46.png">Sensor 46</option>
+                <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-109.png">Sensor 109</option>
+            </select>
+        </div>
+        <img id="displayedImageDistance" class="image-container" src="{{OUTPUT_DIR}}/similarity-measures-sensor-20.png" alt="Distances">
+    </div>
 
-    <div class="container">
-    <name>
-	Beehive acoustic similarity
-    </name>
-	<select id="imageSelectorDistance">
-	    <option value="{{OUTPUT_DIR}}/distance-measures-sensor-20.png">Sensor 20</option>
-	    <option value="{{OUTPUT_DIR}}/distance-measures-sensor-21.png">Sensor 21</option>
-	    <option value="{{OUTPUT_DIR}}/distance-measures-sensor-46.png">Sensor 46</option>
-	    <option value="{{OUTPUT_DIR}}/distance-measures-sensor-109.png">Sensor 109</option>
-	</select>
-    </div>
-    <img id="displayedImageDistance" src="{{OUTPUT_DIR}}/distance-measures-sensor-20.png" alt="Distances">
     <details>
-	<summary>More info</summary>
-	{{similarity_info}}
+        <summary>More info about acoustic spectra</summary>
+        <pre style="white-space: pre-wrap">{{acoustic_spectra_info}}</pre>
+    </details>
+    <details>
+        <summary>More info about temperature-humidity diagram</summary>
+        <pre style="white-space: pre-wrap">{{temperature_humidity_info}}</pre>
+    </details>
+    <details>
+        <summary>More info about similarity plots</summary>
+        <pre style="white-space: pre-wrap">{{similarity_info}}</pre>
+    </details>
+    <details>
+        <summary>More info about datapoints</summary>
+        <pre style="white-space: pre-wrap">{{datapoints_info}}</pre>
     </details>
     <script>
-	const imageSelectorDistance = document.getElementById('imageSelectorDistance');
-	const displayedImageDistance = document.getElementById('displayedImageDistance');
-	imageSelectorDistance.addEventListener('change', function() {
-	    displayedImageDistance.src = this.value;
-	});
+        const imageSelectorDistance = document.getElementById('imageSelectorDistance');
+        const displayedImageDistance = document.getElementById('displayedImageDistance');
+        imageSelectorDistance.addEventListener('change', function() {
+            displayedImageDistance.src = this.value;
+        });
     </script>
 </body>
 </html>
