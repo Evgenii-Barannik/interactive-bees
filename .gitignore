@@ -3,3 +3,5 @@ data/*
 __pycache__/*
 index.html
 
+assets/temperature_humidity_plot.html
+assets/time_slider_plot.html
