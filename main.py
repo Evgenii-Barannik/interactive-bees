@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     
     sensors = [20, 21, 46, 109]
-    start = HELSINKI_4DAYS_AGO
+    start = HELSINKI_2DAYS_AGO
     end = HELSINKI_NOW
     csv_files = download_csv_if_needed(
             sensors,
