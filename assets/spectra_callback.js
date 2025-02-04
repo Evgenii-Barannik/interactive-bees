@@ -51,16 +51,23 @@ function updateSpectraPlot(newRange, spectraPlot) {
     Plotly.restyle(spectraPlot, { y: updateY });
 }
 
+function debounce(func, timeout = 300){
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+  };
+}
+
 // Attach the update callback to the time slider plot's relayout event.
 var timeSliderContainer = document.getElementById('time_slider_plot');
 // Select the inner Plotly graph element (which provides Plotly's event methods).
 var timeSlider = timeSliderContainer.querySelector('.js-plotly-plot');
 if (timeSlider) {
-    timeSlider.on('plotly_relayout', function(eventData) {
-        console.log("Time slider relayout eventData:", eventData);
+    const debouncedUpdate = debounce(function(eventData) {
+        console.log("Debounced relayout eventData:", eventData);
         
         var newRange;
-        // Some versions report the new range as 'xaxis.range'
         if (eventData.hasOwnProperty('xaxis.range')) {
              newRange = eventData['xaxis.range'];
         } else if (eventData.hasOwnProperty('xaxis.range[0]') && eventData.hasOwnProperty('xaxis.range[1]')) {
@@ -69,14 +76,17 @@ if (timeSlider) {
              return;
         }
         
-        console.log("New range:", newRange);
-        // Now, select the inner Plotly element for the acoustic spectra plot.
+        console.log("Final range:", newRange);
         var spectraContainer = document.getElementById('acoustic_spectra_plot');
         var spectraPlot = spectraContainer.querySelector('.js-plotly-plot');
-        console.log("Before update, spectraPlot.data:", spectraPlot ? spectraPlot.data : "Not found");
         if (spectraPlot) {
             updateSpectraPlot(newRange, spectraPlot);
         }
+    }, 300);
+
+    timeSlider.on('plotly_relayout', debouncedUpdate);
+    timeSlider.on('plotly_sliderend', function(eventData) {
+        debouncedUpdate(eventData);
     });
 } else {
     console.error("Time slider graph element not found.");
