@@ -11,6 +11,22 @@ from preprocessing import *
 from mpl_plots import *
 from constants import *
 
+COMMON_MARGIN = dict(l=25, r=25, t=50, b=50)
+SLIDER_MARGIN = dict(l=25, r=25, t=70, b=50)
+CONFIG = {'displaylogo': False, 'responsive': True}
+ANNOTATION_DEFAULTS = { # We use annotations instead of plot titles to control gap between title and plot
+    "x": 0,
+    "y": 1.02,
+    "xref": "paper",
+    "yref": "paper",
+    "showarrow": False,
+    "xanchor": "left",
+    "yanchor": "bottom",
+    "font": {
+        "size": 16 
+    }
+}
+
 def normalize_spectrum(arr):
     arr = np.asarray(arr)
     max_val = np.max(arr)
@@ -51,18 +67,14 @@ def plot_acoustic_spectra(dataset, start, end):
         ))
     
     fig.update_layout(
-        title='Beehive acoustic spectra',
         xaxis=dict(
             title='Frequency, Hz',
             range=[0, 850],
-            tickfont=dict(size=10),
             tickangle=0,
         ),
         yaxis=dict(
             title='Relative Amplitude, %',
             range=[0, 100],
-            tickfont=dict(size=10),
-            automargin=False,
             tickangle=0,
         ),
         hovermode='closest',
@@ -74,10 +86,11 @@ def plot_acoustic_spectra(dataset, start, end):
         ),
         uirevision=True,
         selectionrevision=True,
-        margin=dict(l=25, r=25, t=50, b=25)
+        margin=COMMON_MARGIN,
     )
+    fig.add_annotation(text="Acoustic spectra", **ANNOTATION_DEFAULTS)
     
-    rendered_html = fig.to_html(config={'responsive': True}, include_plotlyjs=True, full_html=False)
+    rendered_html = fig.to_html(config=CONFIG, include_plotlyjs=True, full_html=False)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     with open(ACOUSTIC_SPECTRA_HTML, 'w') as file:
         file.write(rendered_html)
@@ -113,12 +126,11 @@ def plot_time_slider(dataset, start, end):
         )
     
     fig.update_layout(
-        title='Time range selection',
         xaxis=dict(
             type='date',
             rangeslider=dict(
                 visible=True,
-                thickness=0.2,
+                thickness=0.4,
             ),
             tickfont=dict(size=10),
             tickangle=0,
@@ -129,10 +141,11 @@ def plot_time_slider(dataset, start, end):
         dragmode='zoom',
         showlegend=False,
         height=200, 
-        margin=dict(l=25, r=25, t=50, b=25)
+        margin=SLIDER_MARGIN
     )
+    fig.add_annotation(text="Time range selection", **ANNOTATION_DEFAULTS)
     
-    rendered_html = fig.to_html(config={'responsive': True}, include_plotlyjs=True, full_html=False)
+    rendered_html = fig.to_html(config=CONFIG, include_plotlyjs=True, full_html=False)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     with open(TIME_SLIDER_HTML, 'w') as file:
         file.write(rendered_html)
@@ -189,7 +202,6 @@ def plot_temperature_humidity(dataset, start, end):
         )
     
     fig.update_layout(
-        title='Beehive temperature and humidity',
         xaxis_title='Temperature, °C',
         yaxis_title='Relative Humidity, %',
         hovermode='closest',
@@ -200,10 +212,11 @@ def plot_temperature_humidity(dataset, start, end):
         ),
         uirevision=True,
         selectionrevision=True,
-        margin=dict(l=25, r=25, t=50, b=25)
+        margin=COMMON_MARGIN
     )
+    fig.add_annotation(text="Temperature and humidity", **ANNOTATION_DEFAULTS)
 
-    rendered_html = fig.to_html(config={'responsive': True}, include_plotlyjs=True, full_html=False)
+    rendered_html = fig.to_html(config=CONFIG, include_plotlyjs=True, full_html=False)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     with open(TEMPERATURE_HUMIDIY_HTML, 'w') as file:
         file.write(rendered_html)

@@ -1,10 +1,15 @@
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
     <style>
         .plotly-container {
             aspect-ratio: 1.333;
             max-height: 85vh;
+            width: 100%;
+        }
+
+        .slider-container {
             width: 100%;
         }
 
@@ -16,51 +21,59 @@
         .main-container {
             width: 96vw;
         }
+
+        .title {
+            font-family: "Open Sans", Verdana, Arial, sans-serif;
+        }
     </style>
 </head>
 <body class="main-container">
-    <div class="plotly-container">
-        {{acoustic_spectra_plot}}
+    <h3 class="title" style="text-align: center;">
+        Beehive sensor data
+    </h3>
+    <div class="slider-container">
+	{{time_slider_plot}}
     </div>
-
     <div class="plotly-container">
-        {{temperature_humidity_plot}}
+	{{acoustic_spectra_plot}}
     </div>
-    
+    <div class="plotly-container">
+	{{temperature_humidity_plot}}
+    </div>
     <div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
-            <div>Beehive acoustic similarity</div>
-            <select id="imageSelectorDistance" style="width: 200px">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
+            <div class="title">Acoustic similarity</div>
+            <select id="imageSelector" style="width: 100px; margin-right: 20px;">
                 <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-20.png">Sensor 20</option>
                 <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-21.png">Sensor 21</option>
                 <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-46.png">Sensor 46</option>
                 <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-109.png">Sensor 109</option>
             </select>
         </div>
-        <img id="displayedImageDistance" class="image-container" src="{{OUTPUT_DIR}}/similarity-measures-sensor-20.png" alt="Distances">
+        <img id="displayedImage" class="image-container" src="{{OUTPUT_DIR}}/similarity-measures-sensor-20.png" alt="Similarity measures">
     </div>
 
     <details>
-        <summary>More info about acoustic spectra</summary>
-        <pre style="white-space: pre-wrap">{{acoustic_spectra_info}}</pre>
+	<summary>About acoustic spectra</summary>
+	<pre style="white-space: pre-wrap">{{acoustic_spectra_info}}</pre>
     </details>
     <details>
-        <summary>More info about temperature-humidity diagram</summary>
-        <pre style="white-space: pre-wrap">{{temperature_humidity_info}}</pre>
+	<summary>About temperature-humidity diagram</summary>
+	<pre style="white-space: pre-wrap">{{temperature_humidity_info}}</pre>
     </details>
     <details>
-        <summary>More info about similarity plots</summary>
+        <summary>About acoustic similarity</summary>
         <pre style="white-space: pre-wrap">{{similarity_info}}</pre>
     </details>
     <details>
-        <summary>More info about datapoints</summary>
+        <summary>About datapoints used</summary>
         <pre style="white-space: pre-wrap">{{datapoints_info}}</pre>
     </details>
     <script>
-        const imageSelectorDistance = document.getElementById('imageSelectorDistance');
-        const displayedImageDistance = document.getElementById('displayedImageDistance');
-        imageSelectorDistance.addEventListener('change', function() {
-            displayedImageDistance.src = this.value;
+        const imageSelector = document.getElementById('imageSelector');
+        const displayedImage = document.getElementById('displayedImage');
+        imageSelector.addEventListener('change', function() {
+            displayedImage.src = this.value;
         });
     </script>
 </body>

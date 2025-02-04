@@ -205,7 +205,7 @@ def plot_similarity(ds, start, end, output_path, name_overide = None):
             for epoch in np.array([t.timestamp() for t in measurement_datetimes]): # Dots for timestamps
                 ax.scatter(epoch, epoch, color='black', s=1)
 
-        annotation_to_place_on_plot = "Similarity measures for signal from sensor {}:\n{}".format(
+        annotation_to_place_on_plot = "Acoustic similarity measures for signal from sensor {}\n{}".format(
                 sensor,
                 get_info_about_filtered_datapoints(filtered_by_timerange)
         )

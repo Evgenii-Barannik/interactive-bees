@@ -30,14 +30,17 @@ if __name__ == "__main__":
     if all([
         os.path.exists(ACOUSTIC_SPECTRA_HTML),
         os.path.exists(TEMPERATURE_HUMIDIY_HTML),
+        os.path.exists(TIME_SLIDER_HTML),
     ]):
         with open(ACOUSTIC_SPECTRA_HTML, "r") as f:
             acoustic_spectra_html = f.read()
         with open(TEMPERATURE_HUMIDIY_HTML, "r") as f:
             temperature_humidity_html = f.read()
+        with open(TIME_SLIDER_HTML, "r") as f:
+            time_slider_html = f.read()
     else:
         csv_files = download_csv_if_needed(
-                sensors_test,
+                sensors,
                 HELSINKI_4DAYS_AGO.astimezone(UTC_TZ),
                 HELSINKI_NOW.astimezone(UTC_TZ),
                 DATA_DIR
@@ -49,6 +52,11 @@ if __name__ == "__main__":
                 HELSINKI_NOW,
         )
         temperature_humidity_html = plot_temperature_humidity(
+                dataset,
+                HELSINKI_4DAYS_AGO,
+                HELSINKI_NOW,
+        )
+        time_slider_html = plot_time_slider(
                 dataset,
                 HELSINKI_4DAYS_AGO,
                 HELSINKI_NOW,
@@ -66,6 +74,7 @@ if __name__ == "__main__":
         "acoustic_spectra_plot" : acoustic_spectra_html,
         "acoustic_spectra_info" : acoustic_spectra_info,
         "temperature_humidity_plot": temperature_humidity_html,
+        "time_slider_plot": time_slider_html,
         "temperature_humidity_info": temperature_humidity_info,
         "similarity_info": similarity_info,
         "OUTPUT_DIR": OUTPUT_DIR

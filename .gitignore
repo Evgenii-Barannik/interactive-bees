@@ -1,10 +1,12 @@
 data/*
 __pycache__/*
+
 index.html
-assets/similarity-measures-sensor-*.png
 plotly-js-example/simple_plot.html
 assets/temperature_humidity_plot.html
 assets/acoustic_spectra_plot.html
 assets/plots.html
-plotly-js-example/simple_plot.html
 assets/time_slider_plot.html
+
+assets/similarity-measures-sensor-*.png
+*autobuild*
