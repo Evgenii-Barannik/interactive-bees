@@ -17,6 +17,12 @@
         return;
     }
 
+    const continuousUpdateCheckbox = document.getElementById('continuous_update');
+    if (!continuousUpdateCheckbox) {
+        console.error("Continuous update checkbox not found");
+        return;
+    }
+
     let isInteracting = false;
     let lastRange = null;
 
@@ -47,7 +53,7 @@
         }
         lastRange = newRange;
 
-        if (!isInteracting) {
+        if (!isInteracting || continuousUpdateCheckbox.checked) {
             console.log('Relayout event:', {
                 eventData,
                 isInteracting,
