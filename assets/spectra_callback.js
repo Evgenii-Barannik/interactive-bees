@@ -58,20 +58,20 @@
         }
     }
 
-    timeSlider.addEventListener('mousedown', () => {
+    function handleInteractionStart() {
         isInteracting = true;
         const currentRange = getValidRange({});
-        console.log("Mouse down on slider", {
+        console.log("Interaction started", {
             currentRange,
             timestamp: new Date().toISOString()
         });
-    });
+    }
 
-    document.addEventListener('mouseup', (event) => {
+    function handleInteractionEnd() {
         if (isInteracting) {
             isInteracting = false;
             const newRange = getValidRange({});
-            console.log("Mouse up (was dragging)", {
+            console.log("Interaction ended", {
                 newRange,
                 timestamp: new Date().toISOString(),
                 duration: newRange ? `${new Date(newRange[1]) - new Date(newRange[0])}ms` : null
@@ -81,7 +81,13 @@
                 updateSpectraPlot(newRange, spectraPlotElem);
             }
         }
-    });
+    }
+
+    timeSlider.addEventListener('mousedown', handleInteractionStart);
+    document.addEventListener('mouseup', handleInteractionEnd);
+
+    timeSlider.addEventListener('touchstart', handleInteractionStart);
+    document.addEventListener('touchend', handleInteractionEnd);
 
     timeSlider.on('plotly_relayout', handleRelayout);
 
