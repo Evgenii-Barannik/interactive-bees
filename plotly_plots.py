@@ -34,11 +34,12 @@ def normalize_spectrum(arr):
     return 100 * arr / max_val
 
 def plot_acoustic_spectra(dataset, start, end):
+    start = start.astimezone(HELSINKI_TZ)
+    end = end.astimezone(HELSINKI_TZ)
     fig = go.Figure()
     all_sensors = dataset["sensor"].values
     colors = px.colors.sample_colorscale("Portland", len(all_sensors))
-    
-    # Main spectra plot
+
     for i, sensor_id in enumerate(all_sensors):
         filtered_dataset = dataset.sel(sensor=sensor_id).where(
             dataset.sel(sensor=sensor_id)['base'].notnull() &
@@ -48,14 +49,21 @@ def plot_acoustic_spectra(dataset, start, end):
         )
         if filtered_dataset['datetime'].shape[0] == 0:
             continue
+
+        raw_spectra = filtered_dataset['spectrum'].values 
+        raw_times = [
+            t.astimezone(HELSINKI_TZ)
+            for t in filtered_dataset['datetime'].values
+        ]
+
         averaged_spectrum = normalize_spectrum(
             get_non_nan_spectrum(filtered_dataset.mean(dim='datetime')['spectrum'].values)
         )
         spectrum_len = averaged_spectrum.shape[0]
         freq_factor = filtered_dataset['frequency_scaling_factor'].values[0]
-        freq_start = filtered_dataset['frequency_start_index'].values[0]
+        freq_start  = filtered_dataset['frequency_start_index'].values[0]
         frequencies = [(bin+freq_start)*freq_factor for bin in range(spectrum_len)]
-        
+
         fig.add_trace(go.Scatter(
             x=frequencies,
             y=averaged_spectrum,
@@ -64,6 +72,10 @@ def plot_acoustic_spectra(dataset, start, end):
             opacity=0.7,
             line_shape='spline',
             hovertemplate='(%{y:.1f}%, %{x:.1f} Hz<extra></extra>)',
+            meta={
+                "raw_spectra": raw_spectra.tolist(),
+                "raw_times": raw_times
+            }
         ))
     
     fig.update_layout(
@@ -98,6 +110,8 @@ def plot_acoustic_spectra(dataset, start, end):
     return rendered_html
 
 def plot_time_slider(dataset, start, end):
+    start = start.astimezone(HELSINKI_TZ)
+    end = end.astimezone(HELSINKI_TZ)
     fig = go.Figure()
     all_sensors = dataset["sensor"].values
     colors = px.colors.sample_colorscale("Portland", len(all_sensors))
@@ -111,16 +125,18 @@ def plot_time_slider(dataset, start, end):
         )
         if filtered_dataset['datetime'].shape[0] == 0:
             continue
-        times = filtered_dataset['datetime'].values
+            
+        times = [
+            t.astimezone(HELSINKI_TZ)
+            for t in filtered_dataset['datetime'].values
+        ]
+        
         fig.add_trace(
             go.Scatter(
                 x=times,
                 y=[0] * len(times),
                 mode='markers',
-                marker=dict(
-                    color=colors[i], 
-                    size=4
-                ),
+                marker=dict(color=colors[i], size=4),
                 hovertemplate='%{x}<extra></extra>'
             )
         )
@@ -134,7 +150,7 @@ def plot_time_slider(dataset, start, end):
             ),
             tickfont=dict(size=10),
             tickangle=0,
-            automargin=False, # Fixes width changes when new tick label appears while sliding
+            automargin=False,
         ),
         yaxis=dict(visible=False),
         hovermode='closest',
@@ -235,16 +251,17 @@ if __name__ == "__main__":
     sensors = [20, 21, 46, 109]
     csv_files = download_csv_if_needed(
         sensors,
-        HELSINKI_4DAYS_AGO.astimezone(UTC_TZ),
+        HELSINKI_24HOURS_AGO.astimezone(UTC_TZ),
         HELSINKI_NOW.astimezone(UTC_TZ),
         DATA_DIR
     ) 
     dataset = load_dataset(csv_files)
+    filtered_dataset = load_dataset(csv_files, True, HELSINKI_24HOURS_AGO, HELSINKI_NOW)
     
     # Create three individual plots:
-    acoustic_spectra_html = plot_acoustic_spectra(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW)
-    time_slider_html = plot_time_slider(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW)
-    temperature_humidity_html = plot_temperature_humidity(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW)
+    acoustic_spectra_html = plot_acoustic_spectra(filtered_dataset, HELSINKI_24HOURS_AGO, HELSINKI_NOW)
+    time_slider_html = plot_time_slider(filtered_dataset, HELSINKI_24HOURS_AGO, HELSINKI_NOW)
+    temperature_humidity_html = plot_temperature_humidity(filtered_dataset, HELSINKI_24HOURS_AGO, HELSINKI_NOW)
     
     # Combine the three plots into a single HTML output
     with open(PLOTLY_COMBINED_HTML, 'w') as file:

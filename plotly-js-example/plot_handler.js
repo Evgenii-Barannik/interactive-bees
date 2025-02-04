@@ -1,21 +1,20 @@
 function setupPlot(points, fig) {
-    var plot = document.getElementById('plot');
+    const plot = document.getElementById('plot');
     Plotly.newPlot(plot, fig.data, fig.layout);
     
     plot.on('plotly_relayout', function(eventData) {
-        if ('xaxis2.range' in eventData) {
-            let start, end;
-            [start, end] = eventData['xaxis2.range'];
+        if (eventData['xaxis.range']) {
+            const [start, end] = eventData['xaxis.range'].map(d => new Date(d));
             
-            var filtered = points.filter(function(p) {
-                var t = new Date(p.time);
-                return t >= new Date(start) && t <= new Date(end);
+            const filtered = points.filter(p => {
+                const pointTime = Date.parse(p.time);
+                return pointTime >= start.getTime() && pointTime <= end.getTime();
             });
             
             Plotly.restyle(plot, {
-                x: [filtered.map(p => p.x)],
-                y: [filtered.map(p => p.y)],
-                customdata: [filtered.map(p => [p.time])]
+                'x': [filtered.map(p => p.x)],
+                'y': [filtered.map(p => p.y)],
+                'customdata': [filtered.map(p => [p.time])]
             }, [0]);
         }
     });

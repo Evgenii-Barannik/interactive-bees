@@ -98,7 +98,7 @@ def parse_and_pad_spectrum(spectrum_string, required_spectrum_length):
     assert len(spectrum) == required_spectrum_length 
     return spectrum
 
-def load_dataset(files_to_load):
+def load_dataset(files_to_load, filter = False, start = None, end = None):
     assert files_to_load
     max_spectrum_len = get_max_spectrum_len(files_to_load)
     populated_rows = []
@@ -169,6 +169,16 @@ def load_dataset(files_to_load):
             sensor_id, frequency_min, frequency_max, spectra_len_non_nan, spectra_len
         ))
 
+    if filter:
+        assert start
+        assert end
+        assert start < end
+        dataset = dataset.where(
+            (dataset['datetime'] >= start) &
+            (dataset['datetime'] <= end),
+            drop=True
+        )
+    
     logging.info("Type used for DateTime: {}".format(type(dataset["datetime"].values[0])))
     logging.info("Memory used for dataset: {:.3f} MB".format(dataset.nbytes / (1024**2)))
     logging.info("First DateTime in dataset (UTC TZ): {}".format(min(dataset["datetime"].values).astimezone(UTC_TZ)))
@@ -186,12 +196,12 @@ if __name__ == "__main__":
         ]
     )
 
-    sensors_test = [20, 21, 46, 109]
-    files_test = download_csv_if_needed(
-            sensors_test,
-            HELSINKI_4DAYS_AGO.astimezone(UTC_TZ),
+    sensors = [20, 21, 46, 109]
+    files = download_csv_if_needed(
+            sensors,
+            HELSINKI_24HOURS_AGO.astimezone(UTC_TZ),
             HELSINKI_NOW.astimezone(UTC_TZ),
             DATA_DIR
     )
-    dataset_test = load_dataset(files_test)
-    logging.info(get_info_about_all_datapoints(dataset_test, HELSINKI_4DAYS_AGO, HELSINKI_NOW))
+    filtered_dataset = load_dataset(files, True, HELSINKI_24HOURS_AGO, HELSINKI_NOW)
+    logging.info(get_info_about_all_datapoints(filtered_dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW))

@@ -31,10 +31,10 @@
     <h3 class="title" style="text-align: center;">
         Beehive sensor data
     </h3>
-    <div class="slider-container">
+    <div id="time_slider_plot" class="slider-container">
 	{{time_slider_plot}}
     </div>
-    <div class="plotly-container">
+    <div id="acoustic_spectra_plot" class="plotly-container">
 	{{acoustic_spectra_plot}}
     </div>
     <div class="plotly-container">
@@ -76,5 +76,6 @@
             displayedImage.src = this.value;
         });
     </script>
+    <script src="{{OUTPUT_DIR}}/spectra_callback.js"></script>
 </body>
 </html>
