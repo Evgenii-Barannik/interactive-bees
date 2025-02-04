@@ -1,10 +1,12 @@
 from jinja2 import Environment, FileSystemLoader
+import time  # Добавляем модуль time
 
 from plotly_plots import * 
 from mpl_plots import * 
 from constants import *
 
 def create_html(html_data):
+    html_data["version"] = int(time.time())  # Добавляем временную метку
     env = Environment(loader=FileSystemLoader(OUTPUT_DIR))
     template = env.get_template('template.html')
     html_filename = "index.html"
