@@ -12,20 +12,30 @@ from mpl_plots import *
 from constants import *
 
 COMMON_MARGIN = dict(l=25, r=25, t=50, b=50)
-SLIDER_MARGIN = dict(l=25, r=25, t=70, b=50)
-CONFIG = {'displaylogo': False, 'responsive': True}
-ANNOTATION_DEFAULTS = { # We use annotations instead of plot titles to control gap between title and plot
-    "x": 0,
-    "y": 1.02,
-    "xref": "paper",
-    "yref": "paper",
-    "showarrow": False,
-    "xanchor": "left",
-    "yanchor": "bottom",
-    "font": {
-        "size": 16 
-    }
+CONFIG = {
+    'displaylogo': False,
+    'responsive': True,
+    'modeBarButtonsToRemove': [
+        'lasso2d', 
+    ]
 }
+
+# We use annotations instead of plot titles to control gap between title and plot
+ANNOTATION_DEFAULTS = dict(
+    x=0,
+    y=1.02,
+    xref="paper",
+    yref="paper",
+    showarrow=False,
+    xanchor="left",
+    yanchor="bottom",
+    font=dict(size=16)
+)
+LEGEND_CONFIG = dict(
+    tracegroupgap=0,
+    font=dict(size=8),
+    title_text='Sensor', 
+)
 
 def normalize_spectrum(arr):
     arr = np.asarray(arr)
@@ -67,7 +77,7 @@ def plot_acoustic_spectra(dataset, start, end):
         fig.add_trace(go.Scatter(
             x=frequencies,
             y=averaged_spectrum,
-            name=f'Sensor {sensor_id}',
+            name=str(sensor_id),
             marker_color=colors[i],
             opacity=0.7,
             line_shape='spline',
@@ -83,19 +93,17 @@ def plot_acoustic_spectra(dataset, start, end):
             title='Frequency, Hz',
             range=[0, 850],
             tickangle=0,
+            gridwidth=2
         ),
         yaxis=dict(
             title='Relative Amplitude, %',
             range=[0, 100],
             tickangle=0,
+            gridwidth=2
         ),
         hovermode='closest',
         dragmode='zoom',
-        legend=dict(
-            yanchor="top",
-            xanchor="right",
-            bgcolor='rgba(255, 255, 255, 0.5)'
-        ),
+        legend=LEGEND_CONFIG,
         uirevision=True,
         selectionrevision=True,
         margin=COMMON_MARGIN,
@@ -136,7 +144,8 @@ def plot_time_slider(dataset, start, end):
                 x=times,
                 y=[0] * len(times),
                 mode='markers',
-                marker=dict(color=colors[i], size=4),
+                marker=dict(color=colors[i], size=8, opacity=0.5),
+                name=str(sensor_id),
                 hovertemplate='%{x}<extra></extra>'
             )
         )
@@ -146,18 +155,19 @@ def plot_time_slider(dataset, start, end):
             type='date',
             rangeslider=dict(
                 visible=True,
-                thickness=0.4,
+                thickness=0.2,
             ),
             tickfont=dict(size=10),
             tickangle=0,
             automargin=False,
+            gridwidth=2
         ),
         yaxis=dict(visible=False),
         hovermode='closest',
         dragmode='zoom',
-        showlegend=False,
-        height=200, 
-        margin=SLIDER_MARGIN
+        height=300, 
+        margin=COMMON_MARGIN,
+        legend=LEGEND_CONFIG,
     )
     fig.add_annotation(text="Time range selection", **ANNOTATION_DEFAULTS)
     
@@ -202,7 +212,7 @@ def plot_temperature_humidity(dataset, start, end):
                     color=colors[i],
                     opacity=opacities
                 ),
-            name=f'Sensor {sensor_id}',
+            name=str(sensor_id),
                 hovertemplate=(
                     '%{fullData.name}<br>'
                     'Temperature: %{x:.1f}°C<br>'
@@ -220,12 +230,10 @@ def plot_temperature_humidity(dataset, start, end):
     fig.update_layout(
         xaxis_title='Temperature, °C',
         yaxis_title='Relative Humidity, %',
+        xaxis=dict(gridwidth=2),
+        yaxis=dict(gridwidth=2),
         hovermode='closest',
-        legend=dict(
-            yanchor="top",     
-            xanchor="right",
-            bgcolor='rgba(255, 255, 255, 0.5)',
-        ),
+        legend=LEGEND_CONFIG,
         uirevision=True,
         selectionrevision=True,
         margin=COMMON_MARGIN
@@ -258,12 +266,10 @@ if __name__ == "__main__":
     dataset = load_dataset(csv_files)
     filtered_dataset = load_dataset(csv_files, True, HELSINKI_24HOURS_AGO, HELSINKI_NOW)
     
-    # Create three individual plots:
     acoustic_spectra_html = plot_acoustic_spectra(filtered_dataset, HELSINKI_24HOURS_AGO, HELSINKI_NOW)
     time_slider_html = plot_time_slider(filtered_dataset, HELSINKI_24HOURS_AGO, HELSINKI_NOW)
     temperature_humidity_html = plot_temperature_humidity(filtered_dataset, HELSINKI_24HOURS_AGO, HELSINKI_NOW)
     
-    # Combine the three plots into a single HTML output
     with open(PLOTLY_COMBINED_HTML, 'w') as file:
         file.write(acoustic_spectra_html + time_slider_html + temperature_humidity_html)
         logging.info(f"HTML file {PLOTLY_COMBINED_HTML} created")

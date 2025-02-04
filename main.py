@@ -38,7 +38,7 @@ if __name__ == "__main__":
     time_slider_html = plot_time_slider(
             filtered_dataset, start, end
     )
-    _ = plot_similarity(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW, OUTPUT_DIR)
+    _ = plot_similarity(dataset, start, end, OUTPUT_DIR)
 
     with open(ACOUSTIC_SPECTRA_INFO, "r") as f:
         acoustic_spectra_info = f.read()
