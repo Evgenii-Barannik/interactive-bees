@@ -1,53 +1,53 @@
-# name: interactive-bees-build-deploy
+name: interactive-bees-build-deploy
 
-# on:
-#   push:
-#     branches:
-#       - main
-#   schedule:
-#     - cron: '*/30 * * * *' # Will trigger every 30 min
+on:
+  push:
+    branches:
+      - html3
+  schedule:
+    - cron: '*/30 * * * *' # Will trigger every 30 min
     
-# permissions:
-#   contents: write
-#   pages: write
-#   id-token: write
+permissions:
+  contents: write
+  pages: write
+  id-token: write
       
-# jobs:
+jobs:
 
-#   build:
-#     runs-on: ubuntu-latest
-#     defaults:
-#       run:
-#         shell: bash -el {0}
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v4
-#       - uses: conda-incubator/setup-miniconda@v3
-#         with:
-#           environment-file: environment.yml
-#           python-version: 3.10.14
-#           activate-environment: simple_bees
-#           auto-activate-base: false
-#       - run: |
-#           conda env list
-#           conda activate simple_bees
-#           conda list
-#           pip install Jinja2
-#       - name: Run Python code
-#         run: python main.py
-#       - name: Upload static files as artifact
-#         id: deployment
-#         uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
-#         with:
-#           path: .
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          environment-file: environment.yml
+          python-version: 3.10.14
+          activate-environment: bees
+          auto-activate-base: false
+      - run: |
+          conda env list
+          conda activate bees
+          conda list
+      - name: Run Python code
+        run: python main.py
+      - name: Upload static files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
+        with:
+          path: .
 
-#   deploy:
-#     needs: build
-#     environment:
-#       name: github-pages
-#       url: ${{ steps.deployment.outputs.page_url }}
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Deploy to GitHub Pages
-#         id: deployment
-#         uses: actions/deploy-pages@v4
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+[
