@@ -215,6 +215,10 @@ def plot_temperature_humidity(dataset, start, end):
                 color=colors[i],
             ),
             name=str(sensor_id),
+                line=dict(
+                    shape='spline',
+                    smoothing=0.7,
+                ),
                 hovertemplate=(
                     '%{fullData.name}<br>'
                     'Temperature: %{x:.1f}°C<br>'
