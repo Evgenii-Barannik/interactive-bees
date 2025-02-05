@@ -206,7 +206,8 @@ def plot_temperature_humidity(dataset, start, end):
             go.Scatter(
                 x=temperatures,
                 y=humidities,
-            mode="lines+markers",
+            # mode="lines+markers",
+            mode="markers",
             marker=dict(
                 symbol="arrow",
                 size=15,
@@ -215,10 +216,10 @@ def plot_temperature_humidity(dataset, start, end):
                 color=colors[i],
             ),
             name=str(sensor_id),
-                line=dict(
-                    shape='spline',
-                    smoothing=0.7,
-                ),
+                # line=dict(
+                #     shape='spline',
+                #     smoothing=0.7,
+                # ),
                 hovertemplate=(
                     '%{fullData.name}<br>'
                     'Temperature: %{x:.1f}°C<br>'
