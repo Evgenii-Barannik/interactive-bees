@@ -1,0 +1,32 @@
+.plotly-container {
+    aspect-ratio: 1.333;
+    max-height: 96vh;
+    width: 100%;
+}
+
+.slider-container {
+    width: 100%;
+}
+
+.image-container {
+    display: flex;
+    width: 100%;
+}
+
+.main-container {
+    width: 96vw;
+}
+
+.title {
+    font-family: "Open Sans", Verdana, Arial, sans-serif;
+}
+
+.header-and-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sensor-selector {
+    min-width: 150px;
+}

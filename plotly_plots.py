@@ -4,20 +4,18 @@ import plotly.express as px
 import logging
 import os
 import webbrowser
-from pathlib import Path
 import plotly.express as px
+import pandas as pd
+from pathlib import Path
 
-from preprocessing import * 
-from mpl_plots import *
 from constants import *
+from preprocessing import load_dataset, download_csv_if_needed 
 
 COMMON_MARGIN = dict(l=25, r=25, t=50, b=50)
 CONFIG = {
     'displaylogo': False,
     'responsive': True,
-    'modeBarButtonsToRemove': [
-        'lasso2d', 
-    ]
+    'modeBarButtonsToRemove': [ 'lasso2d' ]
 }
 
 # We use annotations instead of plot titles to control gap between title and plot
@@ -31,6 +29,7 @@ ANNOTATION_DEFAULTS = dict(
     yanchor="bottom",
     font=dict(size=16)
 )
+
 LEGEND_CONFIG = dict(
     tracegroupgap=0,
     font=dict(size=8),
@@ -43,35 +42,91 @@ def normalize_spectrum(arr):
     assert max_val != 0
     return 100 * arr / max_val
 
-def plot_acoustic_spectra(dataset, start, end):
-    start = start.astimezone(HELSINKI_TZ)
-    end = end.astimezone(HELSINKI_TZ)
-    fig = go.Figure()
-    all_sensors = dataset["sensor"].values
-    colors = px.colors.sample_colorscale("Portland", len(all_sensors))
+def plot_parallel_selector(ds, return_fig=False):
+    sensors = ds.sensor.values
+    unique_sensors = np.unique(sensors)
+    sensor_to_index_map = {sensor: i for (i, sensor) in enumerate(unique_sensors)}
+    sensor_indices = [sensor_to_index_map[s] for s in sensors] 
 
-    for i, sensor_id in enumerate(all_sensors):
-        filtered_dataset = dataset.sel(sensor=sensor_id).where(
-            dataset.sel(sensor=sensor_id)['base'].notnull() &
-            (dataset['datetime'] >= start) &
-            (dataset['datetime'] <= end),
-            drop=True
+    measurment_datetimes = [t.astimezone(HELSINKI_TZ) for t in ds.datetime.values]
+    tick_datetimes = pd.date_range(
+        start=min(measurment_datetimes),
+        end=max(measurment_datetimes),
+        periods=10,
+        tz=HELSINKI_TZ
+    )
+
+    fig = go.Figure(data=
+        go.Parcoords(
+            line=dict(
+                color=sensor_indices,
+                colorscale='Portland',
+            ),
+            dimensions = list([
+                dict(
+                    label = 'Sensor',
+                    values = sensor_indices, 
+                    tickvals = list(sensor_to_index_map.values()),
+                    ticktext = list(sensor_to_index_map.keys()),
+                    range = [0, len(unique_sensors)-1]   
+                ),
+                dict(
+                    # Datetimes can not be used for values for this type of plot, so we use timestamps:
+                    # https://github.com/plotly/plotly.py/issues/968
+                    label = 'DateTime',
+                    values = [t.timestamp() for t in ds.datetime.values],
+                    tickvals = [t.timestamp() for t in tick_datetimes],
+                    ticktext = [t.strftime('%d %b %H:%M') for t in tick_datetimes]
+                ),
+                dict(
+                    label = 'Temperature,°C',
+                    values = ds.temperature.values
+                    ),
+                dict(
+                    label = 'Humidity, %',
+                    values = ds.humidity.values
+                    ),
+            ])
         )
-        if filtered_dataset['datetime'].shape[0] == 0:
+    )
+
+    if return_fig:
+        return fig
+    else:
+        rendered_html = fig.to_html(config=CONFIG, include_plotlyjs=True, full_html=False)
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        with open(PARALLEL_SELECTOR_HTML, 'w') as file:
+            file.write(rendered_html)
+        logging.info(f"HTML file {PARALLEL_SELECTOR_HTML} was created!")
+        return rendered_html
+
+def plot_acoustic_spectra(ds, start, end, return_fig=False):
+    fig = go.Figure()
+    unique_sensors = np.unique(ds["sensor"].values)
+    colors = px.colors.sample_colorscale("Portland", len(unique_sensors))
+    
+    for i, sensor_id in enumerate(unique_sensors):
+        filtered_ds = ds.where(
+            (ds.sensor == sensor_id) &
+            (ds['datetime'] >= start) &
+            (ds['datetime'] <= end),
+            drop=True,
+            other=0
+        )
+        if len(filtered_ds['datetime'].values) == 0:
+            logging.info(f"No data for sensor {sensor_id}, skipping it.")
             continue
 
-        raw_spectra = filtered_dataset['spectrum'].values 
+        raw_spectra = np.vstack(filtered_ds['spectrum'].values)
         raw_times = [
             t.astimezone(HELSINKI_TZ)
-            for t in filtered_dataset['datetime'].values
+            for t in filtered_ds['datetime'].values
         ]
 
-        averaged_spectrum = normalize_spectrum(
-            get_non_nan_spectrum(filtered_dataset.mean(dim='datetime')['spectrum'].values)
-        )
-        spectrum_len = averaged_spectrum.shape[0]
-        freq_factor = filtered_dataset['frequency_scaling_factor'].values[0]
-        freq_start  = filtered_dataset['frequency_start_index'].values[0]
+        averaged_spectrum = normalize_spectrum(np.nanmean(raw_spectra, axis=0))
+        spectrum_len = len(averaged_spectrum)
+        freq_factor = filtered_ds['frequency_scaling_factor'].values[0]
+        freq_start  = filtered_ds['frequency_start_index'].values[0]
         frequencies = [(bin+freq_start)*freq_factor for bin in range(spectrum_len)]
 
         fig.add_trace(go.Scatter(
@@ -110,35 +165,35 @@ def plot_acoustic_spectra(dataset, start, end):
     )
     fig.add_annotation(text="Acoustic spectra", **ANNOTATION_DEFAULTS)
     
-    rendered_html = fig.to_html(config=CONFIG, include_plotlyjs=True, full_html=False)
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    with open(ACOUSTIC_SPECTRA_HTML, 'w') as file:
-        file.write(rendered_html)
-    logging.info(f"HTML file {ACOUSTIC_SPECTRA_HTML} was created!")
-    return rendered_html
+    if return_fig:
+        return fig
+    else:
+        rendered_html = fig.to_html(config=CONFIG, include_plotlyjs=True, full_html=False)
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        with open(ACOUSTIC_SPECTRA_HTML, 'w') as file:
+            file.write(rendered_html)
+        logging.info(f"HTML file {ACOUSTIC_SPECTRA_HTML} was created!")
+        return rendered_html
 
-def plot_time_slider(dataset, start, end):
-    start = start.astimezone(HELSINKI_TZ)
-    end = end.astimezone(HELSINKI_TZ)
+def plot_time_slider(ds, return_fig=False):
     fig = go.Figure()
-    all_sensors = dataset["sensor"].values
+    all_sensors = np.unique(ds["sensor"].values)
     colors = px.colors.sample_colorscale("Portland", len(all_sensors))
-    
+
     for i, sensor_id in enumerate(all_sensors):
-        filtered_dataset = dataset.sel(sensor=sensor_id).where(
-            dataset.sel(sensor=sensor_id)['base'].notnull() &
-            (dataset['datetime'] >= start) &
-            (dataset['datetime'] <= end),
-            drop=True
+        filtered_dataset = ds.where(
+            ( ds.sensor == sensor_id ),
+            drop=True,
+            other=0
         )
-        if filtered_dataset['datetime'].shape[0] == 0:
+        if len(filtered_dataset['datetime']) == 0:
             continue
-            
+
         times = [
             t.astimezone(HELSINKI_TZ)
             for t in filtered_dataset['datetime'].values
         ]
-        
+
         fig.add_trace(
             go.Scatter(
                 x=times,
@@ -149,7 +204,7 @@ def plot_time_slider(dataset, start, end):
                 hovertemplate='%{x}<extra></extra>'
             )
         )
-    
+
     fig.update_layout(
         xaxis=dict(
             type='date',
@@ -170,35 +225,34 @@ def plot_time_slider(dataset, start, end):
         legend=LEGEND_CONFIG,
     )
     fig.add_annotation(text="Time range selection", **ANNOTATION_DEFAULTS)
-    
-    rendered_html = fig.to_html(config=CONFIG, include_plotlyjs=True, full_html=False)
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    with open(TIME_SLIDER_HTML, 'w') as file:
-        file.write(rendered_html)
-    logging.info(f"HTML file {TIME_SLIDER_HTML} was created!")
-    return rendered_html
 
-def plot_temperature_humidity(dataset, start, end):
+    if return_fig:
+        return fig
+    else:
+        rendered_html = fig.to_html(config=CONFIG, include_plotlyjs=True, full_html=False)
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        with open(TIME_SLIDER_HTML, 'w') as file:
+            file.write(rendered_html)
+        logging.info(f"HTML file {TIME_SLIDER_HTML} was created!")
+        return rendered_html
+
+def plot_temperature_humidity(ds, return_fig=False):
     fig = go.Figure()
-    start = start.astimezone(HELSINKI_TZ)
-    end = end.astimezone(HELSINKI_TZ)
-
-    all_sensors = dataset["sensor"].values
+    all_sensors = np.unique(ds["sensor"].values)
     colors = px.colors.sample_colorscale("Portland", len(all_sensors))
-    last_datetime = max(dataset["datetime"].values).astimezone(HELSINKI_TZ)
+    last_datetime = max(ds["datetime"].values).astimezone(HELSINKI_TZ)
     
     for i, sensor_id in enumerate(all_sensors):
-        filtered_dataset = dataset.sel(sensor=sensor_id).where(
-                    dataset.sel(sensor=sensor_id)['base'].notnull() &
-                    (dataset['datetime'] >= start) &
-                    (dataset['datetime'] <= end),
-                    drop=True
+        filtered_ds = ds.where(
+                (ds.sensor == sensor_id),
+                drop=True,
+                other=0,
         )
-        if filtered_dataset['datetime'].shape[0] == 0:
+        if len(filtered_ds['datetime']) == 0:
             continue
-        temperatures = filtered_dataset['temperature'].values
-        humidities = filtered_dataset['humidity'].values
-        times = filtered_dataset['datetime'].values
+        temperatures = filtered_ds['temperature'].values
+        humidities = filtered_ds['humidity'].values
+        times = filtered_ds['datetime'].values
         floating_hours_time_ago = [(last_datetime - t).total_seconds()/3600 for t in times]
         max_ago = max(floating_hours_time_ago)
         opacities = [0.2 + 0.8 * (1 - t/max_ago) for t in floating_hours_time_ago]
@@ -247,12 +301,15 @@ def plot_temperature_humidity(dataset, start, end):
     )
     fig.add_annotation(text="Temperature and humidity", **ANNOTATION_DEFAULTS)
 
-    rendered_html = fig.to_html(config=CONFIG, include_plotlyjs=True, full_html=False)
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    with open(TEMPERATURE_HUMIDIY_HTML, 'w') as file:
-        file.write(rendered_html)
-    logging.info(f"HTML file {TEMPERATURE_HUMIDIY_HTML} was created!")
-    return rendered_html
+    if return_fig:
+        return fig
+    else:
+        rendered_html = fig.to_html(config=CONFIG, include_plotlyjs=True, full_html=False)
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        with open(TEMPERATURE_HUMIDIY_HTML, 'w') as file:
+            file.write(rendered_html)
+        logging.info(f"HTML file {TEMPERATURE_HUMIDIY_HTML} was created!")
+        return rendered_html
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -263,22 +320,25 @@ if __name__ == "__main__":
         ]
     )
 
-    sensors = [20, 21, 46, 109]
+    sensors = [20, 21, 46, 116, 123]
+    start = HELSINKI_4DAYS_AGO
+    end = HELSINKI_NOW
+
     csv_files = download_csv_if_needed(
         sensors,
-        HELSINKI_24HOURS_AGO.astimezone(UTC_TZ),
-        HELSINKI_NOW.astimezone(UTC_TZ),
+        start.astimezone(UTC_TZ),
+        end.astimezone(UTC_TZ),
         DATA_DIR
     ) 
     dataset = load_dataset(csv_files)
-    filtered_dataset = load_dataset(csv_files, True, HELSINKI_24HOURS_AGO, HELSINKI_NOW)
+    filtered_dataset = load_dataset(csv_files, True, start, end)
     
-    acoustic_spectra_html = plot_acoustic_spectra(filtered_dataset, HELSINKI_24HOURS_AGO, HELSINKI_NOW)
-    time_slider_html = plot_time_slider(filtered_dataset, HELSINKI_24HOURS_AGO, HELSINKI_NOW)
-    temperature_humidity_html = plot_temperature_humidity(filtered_dataset, HELSINKI_24HOURS_AGO, HELSINKI_NOW)
-    
-    with open(PLOTLY_COMBINED_HTML, 'w') as file:
-        file.write(acoustic_spectra_html + time_slider_html + temperature_humidity_html)
-        logging.info(f"HTML file {PLOTLY_COMBINED_HTML} created")
+    time_slider_html = plot_time_slider(filtered_dataset)
+    acoustic_spectra_html = plot_acoustic_spectra(filtered_dataset, start, end)
+    temperature_humidity_html = plot_temperature_humidity(filtered_dataset)
+    parallel_selector_html = plot_parallel_selector(filtered_dataset)
 
+    with open(PLOTLY_COMBINED_HTML, 'w') as file:
+        file.write(time_slider_html + acoustic_spectra_html + temperature_humidity_html + parallel_selector_html)
+        logging.info(f"HTML file {PLOTLY_COMBINED_HTML} created")
     webbrowser.open(Path(PLOTLY_COMBINED_HTML).absolute().as_uri())

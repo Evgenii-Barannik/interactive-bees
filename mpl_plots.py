@@ -2,39 +2,22 @@ from scipy.spatial.distance import pdist, squareform
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import matplotlib.colors as mcolors
-import plotly.express as px
 import copy
 import os
+import logging
+import matplotlib as mpl
 from datetime import datetime
 from matplotlib.ticker import FuncFormatter
-import matplotlib as mpl
-from preprocessing import *
+
 from constants import *
-
-def get_portland_colormap(num = 256):
-    plotly_colors = px.colors.sample_colorscale("Portland", num)
-    colors = []
-    for rgb_str in plotly_colors:
-        rgb_values = str(rgb_str).strip('rgb()').split(',')
-        r, g, b = [int(x) for x in rgb_values]
-        hex_color = f'#{r:02x}{g:02x}{b:02x}'
-        colors.append(hex_color)
-    if num == 256:
-        return mcolors.LinearSegmentedColormap.from_list('portland', colors)
-    else:
-        return colors
-
-def strip_nan_columns(arr):
-    arr = np.asarray(arr)
-    return arr[:, ~np.all(np.isnan(arr), axis=0)]
+from preprocessing import get_info_total, load_dataset, show_image, download_csv_if_needed
 
 def calculate_pearson_distance(spectra):
     distances = pdist(spectra, metric='correlation')
     distance_matrix = squareform(distances)
     return distance_matrix
 
-def calculate_fisher_information_metric(spectra):
+def calculate_fisher_information_distance(spectra):
     num_spectra = spectra.shape[0]
     distance_matrix = np.zeros((num_spectra, num_spectra))
     for i in range(num_spectra):
@@ -64,7 +47,7 @@ def format_time_to_helsinki(x, _):
     dt = datetime.fromtimestamp(x, tz=HELSINKI_TZ) # Timestamps are converted to Helsinki timezone
     return dt.strftime('%H:%M %d')
 
-def get_ticks_Helsinki_time(start, end, step_hours):
+def get_ticks_for_helsinki_tz(start, end, step_in_hours):
     start = start.astimezone(HELSINKI_TZ)
     end = end.astimezone(HELSINKI_TZ)
     assert start < end
@@ -73,18 +56,20 @@ def get_ticks_Helsinki_time(start, end, step_hours):
     ticks = [copy.deepcopy(midnight_before_start)]
     moving = midnight_before_start
     while (moving < midnight_after_end):
-        moving = moving + pd.Timedelta(hours=step_hours)
+        moving = moving + pd.Timedelta(hours=step_in_hours)
         ticks.append(moving)
     return ticks
 
-def get_extended_datetimes(ds, sensor, start, end):
-    ds = ds.sel(sensor=sensor).where(
-                ds.sel(sensor=sensor)['base'].notnull(),
-                drop = True
+def get_extended_datetimes(ds, sensor_id, start, end):
+    ds = ds.where(
+        (ds.sensor == sensor_id),
+        drop = True,
+        other = 0
     )
     datetimes_before_including = ds.where(
-        (ds['datetime'] <= start), 
-        drop = True
+        (ds['datetime'] <= start),
+        drop = True,
+        other = 0
     )['datetime'].values
 
     # If not points before found, use start time as extension:
@@ -97,7 +82,8 @@ def get_extended_datetimes(ds, sensor, start, end):
         
     datetimes_after_including = ds.where(
         (ds['datetime'] >= end), 
-        drop = True
+        drop = True,
+        other = 0
     )['datetime'].values
 
     # If not points after found, use end time as extension:
@@ -116,7 +102,8 @@ def get_extended_datetimes(ds, sensor, start, end):
     datetimes_in_range = ds.where(
         (ds['datetime'] > start) & 
         (ds['datetime'] < end), 
-        drop = True
+        drop = True,
+        other = 0
     )['datetime'].values
 
     extended_datetimes = np.append(pre_extension, datetimes_in_range)
@@ -127,25 +114,28 @@ def plot_similarity(ds, start, end, output_path, name_overide = None):
     logging.info(f"Plotting similarity for requested range\nSTART:   {start}\nEND:     {end}")
     assert start < end # No graph is possible otherwise
     images = []
-    for sensor in ds["sensor"].values:
-        filtered_by_timerange = ds.sel(sensor=sensor).where (
-            ds.sel(sensor=sensor)['base'].notnull() &
-            (ds['datetime'] > start) &            # Strict filtering since start and end may be used as extenstions
+    all_sensors = np.unique(ds.sensor)
+
+    for sensor_id in all_sensors:
+        filtered_by_timerange = ds.where (
+            (ds.sensor == sensor_id) &
+            (ds['datetime'] > start) &  # Strict filtering since start and end may be used as extenstions
             (ds['datetime'] < end),
-            drop = True
+            drop = True,
+            other = 0
         )
-        if filtered_by_timerange['datetime'].shape[0] == 0: # There must be some datapoints to plot a graph
+        if len(filtered_by_timerange['datetime'].values) == 0: # There must be some datapoints to plot a graph
             continue
         measurement_datetimes = np.array([dt.astimezone(HELSINKI_TZ) for dt in filtered_by_timerange['datetime'].values])
         num_of_datapoints = len(measurement_datetimes)
-        logging.info(f"\nFor sensor {sensor}:")
+        logging.info(f"\nFor sensor {sensor_id}:")
         logging.info(f"First datapoints: {min(measurement_datetimes)}")
         logging.info(f"Last datapoint:   {max(measurement_datetimes)}")
         logging.info(f"Num of datapoints: {num_of_datapoints}")
 
         # Spectra for extension datapoints do not matter. If there are spectra for those points, those spectra will not influence plot.
         # But extension datetimes will be used to construct leftmost and rightmost Voronoi edges.
-        extended_datetimes = get_extended_datetimes(ds, sensor, start, end)
+        extended_datetimes = get_extended_datetimes(ds, sensor_id, start, end)
         extended_datetimes = np.array([dt.astimezone(HELSINKI_TZ) for dt in extended_datetimes])
         assert extended_datetimes[0] <= start # pre-extension datetime should be before start or at start
         assert extended_datetimes[-1] >= end # post-extension datetime should be after end or at end
@@ -158,12 +148,11 @@ def plot_similarity(ds, start, end, output_path, name_overide = None):
         rightmost_edge = pd.to_datetime(voronoi_edges[-1], unit='s', utc=True).tz_convert('Europe/Helsinki')
         logging.info(f"Voronoi edges from:  {leftmost_edge}\nVoronoi edges to:    {rightmost_edge}")
 
-        # Compute distances, will be used to color Voronoi cells
-        spectra = filtered_by_timerange['spectrum'].values
-        spectra = strip_nan_columns(spectra)
+        spectra = np.vstack(filtered_by_timerange['spectrum'].values)
 
+        # Compute distances, will be used to color Voronoi cells
         pearson_matrix = calculate_pearson_distance(spectra)
-        fisher_matrix = calculate_fisher_information_metric(spectra)
+        fisher_matrix = calculate_fisher_information_distance(spectra)
         angular_matrix = calculate_angular_distance(spectra)
         euclidean_matrix = calculate_euclidean_distance(spectra)
 
@@ -188,7 +177,7 @@ def plot_similarity(ds, start, end, output_path, name_overide = None):
         # Data is ploted using unix epochs
         # Ticks are set using unix epochs
         # Tick labels show datetimes in Helsinki timezone
-        datetimes_for_ticks = get_ticks_Helsinki_time(start, end, 12) 
+        datetimes_for_ticks = get_ticks_for_helsinki_tz(start, end, 12) 
         epochs_for_ticks = [x.timestamp() for x in datetimes_for_ticks] # Unix epochs
 
         # Settings for Axes
@@ -206,8 +195,8 @@ def plot_similarity(ds, start, end, output_path, name_overide = None):
                 ax.scatter(epoch, epoch, color='black', s=1)
 
         annotation_to_place_on_plot = "Acoustic similarity measures for signal from sensor {}\n{}".format(
-                sensor,
-                get_info_about_filtered_datapoints(filtered_by_timerange)
+                sensor_id,
+                get_info_total(filtered_by_timerange)
         )
         fig.text(0.6, 0.88, annotation_to_place_on_plot, ha='right', fontsize=14)
         plt.tight_layout(pad=2.5)
@@ -216,7 +205,7 @@ def plot_similarity(ds, start, end, output_path, name_overide = None):
         if name_overide:
             img_pathname = os.path.join(output_path, name_overide)
         else:
-            img_pathname = os.path.join(output_path, f"similarity-measures-sensor-{sensor}.png")
+            img_pathname = os.path.join(output_path, f"similarity-measures-sensor-{sensor_id}.png")
 
         images.append(img_pathname) 
         os.makedirs(output_path, exist_ok=True)
@@ -225,25 +214,25 @@ def plot_similarity(ds, start, end, output_path, name_overide = None):
         logging.info(f"PNG file {img_pathname} was created!")
     return images
 
-def regenerate_example():
+def plot_similarity_example():
     sensors = [21]
-    helsinki_start = datetime(2024, 8, 11, 0, tzinfo = HELSINKI_TZ)
-    helsinki_end = datetime(2024, 8, 14, 0, 0, tzinfo = HELSINKI_TZ)
+    start = datetime(2024, 8, 11, 0, tzinfo = HELSINKI_TZ)
+    end = datetime(2024, 8, 14, 0, 0, tzinfo = HELSINKI_TZ)
     csv_files = download_csv_if_needed(
             sensors,
-            helsinki_start.astimezone(UTC_TZ),
-            helsinki_end.astimezone(UTC_TZ),
+            start.astimezone(UTC_TZ),
+            end.astimezone(UTC_TZ),
             DATA_DIR
             )
     dataset = load_dataset(csv_files)
     similarity_plots = plot_similarity(
             dataset,
-            helsinki_start,
-            helsinki_end,
+            start,
+            end,
             OUTPUT_DIR,
             "similarity_example.png"
     )
-    show_image(similarity_plots[0])
+    return similarity_plots
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -254,16 +243,5 @@ if __name__ == "__main__":
         ]
     )
 
-    regenerate_example() 
-
-    sensors = [20, 21, 46, 109]
-    csv_files = download_csv_if_needed(
-            sensors,
-            HELSINKI_4DAYS_AGO.astimezone(UTC_TZ),
-            HELSINKI_NOW.astimezone(UTC_TZ),
-            DATA_DIR
-    )
-    dataset = load_dataset(csv_files)
-
-    correlations = plot_similarity(dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW, OUTPUT_DIR)
-    show_image(correlations[0])
+    example = plot_similarity_example() 
+    show_image(example[0])

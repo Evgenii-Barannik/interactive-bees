@@ -7,8 +7,10 @@ assets/temperature_humidity_plot.html
 assets/acoustic_spectra_plot.html
 assets/plots.html
 assets/time_slider_plot.html
+assets/parallel_selector_plot.html
 
 assets/similarity-measures-sensor-*.png
 *autobuild*
 assets/averaged_spectra_sensor_109.csv
 assets/averaged_spectra_sensor_109_modeled.dat
+

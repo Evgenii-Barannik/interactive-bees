@@ -1,43 +1,38 @@
 import pandas as pd
 import numpy as np
-import xarray as xr
 import os
 import requests
 import pandas as pd
 import logging
 import math
 
-from constants import * 
+from constants import *
 
-def get_non_nan_spectrum(spectrum):
-    spectrum = np.asarray(spectrum)
-    assert np.any(~np.isnan(spectrum)), "Array contains only NaN values."
-    return spectrum[~np.isnan(spectrum)]
-
-def get_info_about_filtered_datapoints(filtered_dataset):
-    num_of_datapoints = filtered_dataset['datetime'].shape[0]
-    start_time = min(filtered_dataset['datetime'].values).astimezone(HELSINKI_TZ)
-    end_time = max(filtered_dataset['datetime'].values).astimezone(HELSINKI_TZ)
+def get_info_total(filtered_ds):
+    num_of_datapoints = len(filtered_ds['datetime'].values)
+    start_time = min(filtered_ds['datetime'].values).astimezone(HELSINKI_TZ)
+    end_time = max(filtered_ds['datetime'].values).astimezone(HELSINKI_TZ)
     text_for_legend = f"First datapoint: {start_time}\nLast datapoint: {end_time}\nNumber of datapoints: {num_of_datapoints}\n" 
     return text_for_legend
 
-def get_info_about_all_datapoints(ds, start, end):
+def get_info_for_each_sensor(ds, start, end):
     text = ""
-    for sensor_id in ds["sensor"].values:
-        filtered_dataset = ds.sel(sensor=sensor_id).where(
-                (ds['datetime'] >= start) & 
-                (ds['datetime'] <= end) & 
-                ds.sel(sensor=sensor_id)['base'].notnull(),
+    all_sensors = np.unique(ds.sensor)
+    for sensor_id in all_sensors:
+        filtered_dataset = ds.where(
+                (ds.sensor == sensor_id) &
+                (ds.datetime >= start) & 
+                (ds.datetime <= end),
                 drop=True
         )
-        if filtered_dataset['datetime'].shape[0] > 0:
-            num_of_datapoints = filtered_dataset['datetime'].shape[0]
-            start_time = min(filtered_dataset['datetime'].values).astimezone(HELSINKI_TZ)
-            end_time = max(filtered_dataset['datetime'].values).astimezone(HELSINKI_TZ)
-            transient_text = f"""For sensor {sensor_id}:
+        if len(filtered_dataset.datetime.values) > 0:
+            num_of_datapoints = len(filtered_dataset.datetime.values)
+            start_time = min(filtered_dataset.datetime.values).astimezone(HELSINKI_TZ)
+            end_time = max(filtered_dataset.datetime.values).astimezone(HELSINKI_TZ)
+            transient_text = f"""\nFor sensor {sensor_id}:
 First datapoint: {start_time}
 Last datapoint: {end_time}
-Number of datapoints: {num_of_datapoints}\n
+Number of datapoints: {num_of_datapoints}
 """ 
             text += transient_text
     return text
@@ -48,8 +43,8 @@ def show_image(image_name):
     if os.path.exists(lyn_app_path):
         os.system(f'open -g -a {lyn_app_path} {image_name}')
 
+# Database stores datetimes as UTC, so UTC datetimes are required for GET request
 def download_csv_if_needed(sensors, start_datetime_utc, end_datetime_utc, dir_to_save_csv):
-    # Database stores datetimes as UTC, so UTC datetimes are required for GET request
     assert start_datetime_utc.tzinfo == UTC_TZ
     assert end_datetime_utc.tzinfo == UTC_TZ
 
@@ -63,6 +58,7 @@ def download_csv_if_needed(sensors, start_datetime_utc, end_datetime_utc, dir_to
         pathname = f"{dir_to_save_csv}/sensor_{sensor}_from_{date_start}_to_{date_end}.csv"
         if not os.path.isfile(pathname):
             url = f"{base_url}?sensor={sensor}&date_from={date_start}&date_to={date_end}"
+            logging.info(f"Using this request:\n{url}")
             response = requests.get(url)
             if response.status_code == 200:
                 with open(pathname, 'wb') as file:
@@ -70,121 +66,88 @@ def download_csv_if_needed(sensors, start_datetime_utc, end_datetime_utc, dir_to
                 downloaded_csvs.append(pathname)           
                 logging.info(f"CSV file downloaded and saved: {pathname}")
             else:
-                logging.info(f"Failed to download CSV file for sensor {sensor}. Status code: {response.status_code}")
+                logging.info(f"Failed to download CSV file for sensor {sensor}.\n{response}")
         else:
             downloaded_csvs.append(pathname)           
             logging.info(f"CSV file already exists: {pathname}")
     return downloaded_csvs
 
-def get_max_spectrum_len(files_to_load):
-    max_spectrum_len = 0
-    for pathname in files_to_load:
-        df_with_raw_spectra = pd.read_csv(pathname)
-        for _, row in df_with_raw_spectra.iterrows():
-            list_of_strings = str(row['Spectrum']).strip('[]').split(';')
-            spectrum_len = len([float(s) for s in list_of_strings])
-            if spectrum_len > max_spectrum_len:
-                max_spectrum_len = spectrum_len
-
-    assert max_spectrum_len != 0, f"No data found inside passed CSV files: {files_to_load}"
-    return max_spectrum_len
-
-def parse_and_pad_spectrum(spectrum_string, required_spectrum_length):
+def parse_spectrum(spectrum_string):
     list_of_strings = str(spectrum_string).strip('[]').split(';')
     spectrum = [float(s) for s in list_of_strings]
-    assert len(spectrum) <= required_spectrum_length
-    if len(spectrum) < required_spectrum_length:
-        spectrum.extend ([np.nan]*(required_spectrum_length - len(spectrum))) # Spectrum array get extended at the end
-    assert len(spectrum) == required_spectrum_length 
     return spectrum
 
-def load_dataset(files_to_load, filter = False, start = None, end = None):
+def load_dataset(files_to_load, filter_by_datetime = False, start = None, end = None): 
     assert files_to_load
-    max_spectrum_len = get_max_spectrum_len(files_to_load)
     populated_rows = []
     for pathname in files_to_load:
         df_with_raw_spectrum = pd.read_csv(pathname) 
         for _, row in df_with_raw_spectrum.iterrows():
             row_data = row.to_dict()
             row_data["DateTime"] = pd.to_datetime(row_data["DateTime"]) # Datetime strings are converted to Pandas DateTimes
-            row_data["Spectrum"] = parse_and_pad_spectrum(row_data["Spectrum"], max_spectrum_len)
+            row_data["Spectrum"] = parse_spectrum(row_data["Spectrum"])
             populated_rows.append(row_data)
 
-    # Getting possible coord values
     transient_dataframe = pd.DataFrame(populated_rows)
-    unique_sensors = transient_dataframe['Sensor'].unique()
-    unique_datetimes = transient_dataframe['DateTime'].unique()
+    transient_dataframe = transient_dataframe.rename(columns= lambda x: str(x).lower())
+    dataset = transient_dataframe.to_xarray()
 
-    # Initializing arrays with NaNs
-    columns = transient_dataframe.keys()
-    spectrum_array = np.full((len(unique_datetimes), len(unique_sensors), max_spectrum_len), np.nan) #3D array
-    other_arrays = {
-            c.lower(): np.full((len(unique_datetimes), len(unique_sensors)), np.nan) #2D arrays
-            for c in columns if c not in ['DateTime', 'Sensor', 'Spectrum']
-    }
-
-    # Populating arrays 
-    for _, row in transient_dataframe.iterrows():
-        datetime_idx = list(unique_datetimes).index(row['DateTime'])
-        sensor_idx = list(unique_sensors).index(row['Sensor'])
-        spectrum_array[datetime_idx, sensor_idx, :len(range(max_spectrum_len))] = row['Spectrum']
-        for c in columns:
-            if c not in ['DateTime', 'Sensor', 'Spectrum']:
-                other_arrays[c.lower()][datetime_idx, sensor_idx] = row[c]
-
-    # Creating dataset
-    dataset = xr.Dataset(
-        { "spectrum": (['datetime', 'sensor', 'channel'], spectrum_array) } |
-        { key: (['datetime', 'sensor'], value) for key, value in other_arrays.items() },
-        coords={
-            "datetime": unique_datetimes,
-            "sensor": unique_sensors,
-            "channel": np.arange(max_spectrum_len)
-        }
-    )
-    
-    logging.info("\nDataset:\n{}".format(dataset))
-    all_sensors = dataset["sensor"].values
+    all_sensors = np.unique(dataset.sensor)
     for sensor_id in all_sensors:
-        filtered_dataset = dataset.sel(sensor=sensor_id).where(
-                dataset.sel(sensor=sensor_id)['base'].notnull(),
-                drop=True
-        )
-        # TODO: Check if all values are the same in rows
-        spectra_len = filtered_dataset['spectrum'][0].shape[0]
-        spectra_len_non_nan = get_non_nan_spectrum(filtered_dataset['spectrum'][0]).shape[0]
-        frequency_min = filtered_dataset['frequency_min'].values[0]
-        frequency_max = filtered_dataset['frequency_max'].values[0]
-        frequency_start_index = filtered_dataset['frequency_start_index'].values[0]
-        frequency_scaling_factor = filtered_dataset['frequency_scaling_factor'].values[0]
+        filtered_dataset = dataset.where(dataset.sensor==sensor_id, drop=True)
+
+        spectra_len_values = np.unique([len(s) for s in filtered_dataset.spectrum.values])
+        frequency_min_values = np.unique([v for v in filtered_dataset.frequency_min])
+        frequency_max_values = np.unique([v for v in filtered_dataset.frequency_max])
+        frequency_start_index_values = np.unique([v for v in filtered_dataset.frequency_start_index.values])
+        frequency_scaling_factor_values = np.unique([v for v in filtered_dataset.frequency_scaling_factor.values])
+
+        assert len(spectra_len_values) == 1
+        assert len(frequency_min_values) == 1
+        assert len(frequency_max_values) == 1
+        assert len(frequency_start_index_values) == 1
+        assert len(frequency_scaling_factor_values) == 1
+
+        spectra_len = spectra_len_values[0]
+        frequency_min = frequency_min_values[0]
+        frequency_max = frequency_max_values[0]
+        frequency_start_index = frequency_start_index_values[0]
+        frequency_scaling_factor = frequency_scaling_factor_values[0]
         frequencies = [
-                    (bin+frequency_start_index)*frequency_scaling_factor
-                    for bin in range(spectra_len_non_nan) 
+                (bin+frequency_start_index)*frequency_scaling_factor
+                for bin in range(spectra_len) 
         ]
-        assert spectra_len_non_nan == len(frequencies)
-        assert spectra_len_non_nan == filtered_dataset['spectrum_length'].values[0]
+
+        assert spectra_len == len(frequencies)
         assert math.isclose(frequency_min, frequencies[0])
         assert math.isclose(frequency_max, frequencies[-1])
-        logging.info("Spectra for sensor {:3}: ({:.2f}-{:-7.2f} Hz) ({} bins) ({} bins before NaN stripping) ".format(
-            sensor_id, frequency_min, frequency_max, spectra_len_non_nan, spectra_len
+
+        logging.info("Spectra for sensor {:3}: ({:.2f}-{:-7.2f} Hz) ({} bins)".format(
+            sensor_id, frequency_min, frequency_max, spectra_len, spectra_len
         ))
 
-    if filter:
+    if filter_by_datetime:
         assert start
         assert end
         assert start < end
         dataset = dataset.where(
-            (dataset['datetime'] >= start) &
-            (dataset['datetime'] <= end),
-            drop=True
+            (dataset.datetime >= start) &
+            (dataset.datetime <= end),
+            drop=True,
+            other = 0
         )
-    
-    logging.info("Type used for DateTime: {}".format(type(dataset["datetime"].values[0])))
+    # Usa of xarray.DataArray.where() without specification of non-nan other
+    # ends up in converting columns to float
+
+    logging.info(f"\n{dataset}")
     logging.info("Memory used for dataset: {:.3f} MB".format(dataset.nbytes / (1024**2)))
-    logging.info("First DateTime in dataset (UTC TZ): {}".format(min(dataset["datetime"].values).astimezone(UTC_TZ)))
-    logging.info("Last DateTime in dataset (UTC TZ):  {}".format(max(dataset["datetime"].values).astimezone(UTC_TZ)))
-    logging.info("First DateTime in dataset (Helsinki TZ): {}".format(min(dataset["datetime"].values).astimezone(HELSINKI_TZ)))
-    logging.info("Last DateTime in dataset (Helsinki TZ):  {}\n".format(max(dataset["datetime"].values).astimezone(HELSINKI_TZ)))
+    logging.info("Type used for sensor: {}".format(type(dataset["sensor"].values[0])))
+    logging.info("Type used for datetime: {}".format(type(dataset["datetime"].values[0])))
+    logging.info("First DateTime in dataset (UTC): {}".format(min(dataset["datetime"].values).astimezone(UTC_TZ)))
+    logging.info("Last DateTime in dataset (UTC):  {}".format(max(dataset["datetime"].values).astimezone(UTC_TZ)))
+    logging.info("First DateTime in dataset (Helsinki): {}".format(min(dataset["datetime"].values).astimezone(HELSINKI_TZ)))
+    logging.info("Last DateTime in dataset (Helsinki):  {}".format(max(dataset["datetime"].values).astimezone(HELSINKI_TZ)))
+
     return dataset
 
 if __name__ == "__main__":
@@ -196,12 +159,15 @@ if __name__ == "__main__":
         ]
     )
 
-    sensors = [20, 21, 46, 109]
+    start = HELSINKI_4DAYS_AGO
+    end = HELSINKI_NOW
+    sensors = [109, 116, 117, 118]
     files = download_csv_if_needed(
             sensors,
-            HELSINKI_24HOURS_AGO.astimezone(UTC_TZ),
-            HELSINKI_NOW.astimezone(UTC_TZ),
+            start.astimezone(UTC_TZ),
+            end.astimezone(UTC_TZ),
             DATA_DIR
     )
-    filtered_dataset = load_dataset(files, True, HELSINKI_24HOURS_AGO, HELSINKI_NOW)
-    logging.info(get_info_about_all_datapoints(filtered_dataset, HELSINKI_4DAYS_AGO, HELSINKI_NOW))
+
+    filtered_dataset = load_dataset(files, True, start, end)
+    logging.info(get_info_for_each_sensor(filtered_dataset, start, end))

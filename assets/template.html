@@ -2,30 +2,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
-    <style>
-        .plotly-container {
-            aspect-ratio: 1.333;
-            max-height: 96vh;
-            width: 100%;
-        }
-
-        .slider-container {
-            width: 100%;
-        }
-
-        .image-container {
-            display: flex;
-            width: 100%;
-        }
-
-        .main-container {
-            width: 96vw;
-        }
-
-        .title {
-            font-family: "Open Sans", Verdana, Arial, sans-serif;
-        }
-    </style>
+    <link href="assets/styles.css" rel="stylesheet">
 </head>
 <body class="main-container">
     <h3 class="title" style="text-align: center;">
@@ -46,18 +23,19 @@
     <div class="plotly-container">
 	{{temperature_humidity_plot}}
     </div>
+    <div class="plotly-container">
+        {{parallel_selector_plot}}
+    </div>
     <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
             <div class="title">Acoustic similarity</div>
             <select id="imageSelector" style="width: 100px; margin-right: 20px;">
-                <!--<option value="{{OUTPUT_DIR}}/similarity-measures-sensor-20.png">Sensor 20</option>-->
-                <!--<option value="{{OUTPUT_DIR}}/similarity-measures-sensor-21.png">Sensor 21</option>-->
-                <!--<option value="{{OUTPUT_DIR}}/similarity-measures-sensor-46.png">Sensor 46</option>-->
-                <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-116.png">Sensor 116</option>
-                <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-109.png">Sensor 109</option>
+                {% for sensor in sensors %}
+                <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
+                {% endfor %}
             </select>
         </div>
-        <img id="displayedImage" class="image-container" src="{{OUTPUT_DIR}}/similarity-measures-sensor-116.png" alt="Similarity measures">
+        <img id="displayedImage" class="image-container" src="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensors[0]}}.png" alt="Similarity measures">
     </div>
 
     <details>
