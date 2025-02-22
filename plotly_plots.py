@@ -220,7 +220,14 @@ def plot_time_slider(ds, return_fig=False):
                 name=f'{sensor_id}',
                 legendgroup=f'sensor_{sensor_id}',
                 showlegend=True,
-                hovertemplate='%{x|%d %b %H:%M}<br>Temp: %{y:.1f}°C<extra></extra>'
+                hovertemplate=(
+                    '%{customdata}<br>'
+                    'Temperature: %{y:.1f}°C<extra></extra>'
+                ),
+                customdata=[
+                    t.astimezone(HELSINKI_TZ).strftime('%Y-%m-%d %H:%M:%S%z') 
+                    for t in filtered_ds['datetime'].values
+                ]
             ),
             row=1, col=1
         )
@@ -244,7 +251,14 @@ def plot_time_slider(ds, return_fig=False):
                 name=f'Sensor {sensor_id}',
                 legendgroup=f'sensor_{sensor_id}',
                 showlegend=False,
-                hovertemplate='%{x|%d %b %H:%M}<br>Humidity: %{y:.1f}%<extra></extra>'
+                hovertemplate=(
+                    '%{customdata}<br>'
+                    'Humidity: %{y:.1f}%<extra></extra>'
+                ),
+                customdata=[
+                    t.astimezone(HELSINKI_TZ).strftime('%Y-%m-%d %H:%M:%S%z') 
+                    for t in filtered_ds['datetime'].values
+                ]
             ),
             row=2, col=1
         )
@@ -252,12 +266,8 @@ def plot_time_slider(ds, return_fig=False):
     fig.update_layout(
         hovermode='closest',
         dragmode='zoom',
-        margin=COMMON_MARGIN,
+        margin={**COMMON_MARGIN, "l":60},
         legend=LEGEND_CONFIG,
-    )
-
-    fig.update_layout(
-        margin=dict(l=50)
     )
 
     fig.update_yaxes(
@@ -284,9 +294,7 @@ def plot_time_slider(ds, return_fig=False):
     )
     
     fig.add_annotation(
-        text="Time range selection", 
-        **{**ANNOTATION_DEFAULTS, 'y': 1.02}
-    )
+        text="Time range selection", **ANNOTATION_DEFAULTS)
 
     if return_fig:
         return fig

@@ -45,7 +45,7 @@ def calculate_euclidean_distance(spectra):
 
 def format_time_to_helsinki(x, _):
     dt = datetime.fromtimestamp(x, tz=HELSINKI_TZ) # Timestamps are converted to Helsinki timezone
-    return dt.strftime('%H:%M %d')
+    return dt.strftime('%d %H:%M')
 
 def get_ticks_for_helsinki_tz(start, end, step_in_hours):
     start = start.astimezone(HELSINKI_TZ)
