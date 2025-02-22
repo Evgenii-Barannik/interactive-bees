@@ -1,16 +1,19 @@
 data/*
 __pycache__/*
+*autobuild*
 
 index.html
 plotly-js-example/simple_plot.html
+
 assets/temperature_humidity_plot.html
 assets/acoustic_spectra_plot.html
 assets/plots.html
 assets/time_slider_plot.html
 assets/parallel_selector_plot.html
-
 assets/similarity-measures-sensor-*.png
-*autobuild*
+assets/gaussians-sensor-*.png
 assets/averaged_spectra_sensor_109.csv
 assets/averaged_spectra_sensor_109_modeled.dat
+
+
 

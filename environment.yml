@@ -12,3 +12,4 @@ dependencies:
   - pip
   - pip:
     - jinja2
+    - lmfit

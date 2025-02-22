@@ -91,7 +91,7 @@ def plot_parallel_selector(ds, return_fig=False):
         )
     )
     fig.update_layout(
-        margin=COMMON_MARGIN,
+        margin={**COMMON_MARGIN, "r":50},
     )
 
     if return_fig:

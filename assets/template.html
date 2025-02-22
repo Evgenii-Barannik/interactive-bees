@@ -20,12 +20,23 @@
     <div id="acoustic_spectra_plot" class="plotly-container">
 	{{acoustic_spectra_plot}}
     </div>
+
 	<!--   <div class="plotly-container">-->
 	<!--{{temperature_humidity_plot}}-->
 	<!--   </div>-->
-    <div class="plotly-container">
-        {{parallel_selector_plot}}
+
+    <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
+            <div class="title">Gaussian fit</div>
+            <select id="gaussImageSelector" style="width: 100px; margin-right: 20px;">
+                {% for sensor in sensors %}
+                <option value="{{OUTPUT_DIR}}/gaussians-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <img id="displayedGaussImage" class="image-container" src="{{OUTPUT_DIR}}/gaussians-sensor-{{sensors[0]}}.png" alt="Gaussian decomposition">
     </div>
+
     <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
             <div class="title">Acoustic similarity</div>
@@ -38,6 +49,10 @@
         <img id="displayedImage" class="image-container" src="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensors[0]}}.png" alt="Similarity measures">
     </div>
 
+    <div class="plotly-container">
+        {{parallel_selector_plot}}
+    </div>
+
     <details>
 	<summary>About acoustic spectra</summary>
 	<pre style="white-space: pre-wrap">{{acoustic_spectra_info}}</pre>
@@ -46,6 +61,10 @@
 	<!--<summary>About temperature-humidity diagram</summary>-->
 	<!--<pre style="white-space: pre-wrap">{{temperature_humidity_info}}</pre>-->
 	<!--   </details>-->
+    <!--<details>-->
+    <!--    <summary>About Gaussian decomposition</summary>-->
+    <!--    <pre style="white-space: pre-wrap">{{gauss_info}}</pre>-->
+    <!--</details>-->
     <details>
         <summary>About acoustic similarity</summary>
         <pre style="white-space: pre-wrap">{{similarity_info}}</pre>
@@ -55,6 +74,12 @@
         <pre style="white-space: pre-wrap">{{datapoints_info}}</pre>
     </details>
     <script>
+        const gaussImageSelector = document.getElementById('gaussImageSelector');
+        const displayedGaussImage = document.getElementById('displayedGaussImage');
+        gaussImageSelector.addEventListener('change', function() {
+            displayedGaussImage.src = this.value;
+        });
+
         const imageSelector = document.getElementById('imageSelector');
         const displayedImage = document.getElementById('displayedImage');
         imageSelector.addEventListener('change', function() {

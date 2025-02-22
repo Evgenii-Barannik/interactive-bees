@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from constants import *
 from plotly_plots import plot_time_slider, plot_acoustic_spectra, plot_temperature_humidity, plot_parallel_selector
-from mpl_plots import plot_similarity
+from mpl_plots import plot_similarity, plot_gaussians
 from preprocessing import download_csv_if_needed, load_dataset
 
 def create_html(html_data):
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     
     start = HELSINKI_4DAYS_AGO
     end = HELSINKI_NOW
-    sensors = [20, 21, 46, 109]
+    sensors = [21, 109, 116]
   
     # Code section bellow will check if required HTML pieces very already created.
     # It will skip a lot of time on the seconds run because it does not try to recreate existing HTML pieces.
@@ -63,7 +63,7 @@ if __name__ == "__main__":
         time_slider_html = plot_time_slider(dataset)
         parallel_selector_html = plot_parallel_selector(dataset)
         _ = plot_similarity(dataset, start, end, OUTPUT_DIR)
-
+        _ = plot_gaussians(dataset, OUTPUT_DIR)
     with open(ACOUSTIC_SPECTRA_INFO, "r") as f:
         acoustic_spectra_info = f.read()
     with open(TEMPERATURE_HUMIDIY_INFO, "r") as f:

@@ -5,7 +5,7 @@ import logging
 from constants import *
 from preprocessing import download_csv_if_needed, load_dataset, get_info_for_each_sensor
 from plotly_plots import plot_acoustic_spectra, plot_time_slider, plot_temperature_humidity, plot_parallel_selector
-from mpl_plots import plot_similarity
+from mpl_plots import plot_similarity, plot_gaussians
 from html_templating import create_html
 
 if __name__ == "__main__":
@@ -18,9 +18,9 @@ if __name__ == "__main__":
         ]
     )
 
-    sensors = [20, 21, 116, 123]
-    start = HELSINKI_4DAYS_AGO
-    end = HELSINKI_NOW
+    sensors = [109, 116]
+    start = datetime(2025, 2, 13, 0, tzinfo = HELSINKI_TZ)
+    end = datetime(2025, 2, 17, 0, 0, tzinfo = HELSINKI_TZ)
 
     csv_files = download_csv_if_needed(
             sensors,
@@ -37,6 +37,7 @@ if __name__ == "__main__":
     temperature_humidity_html = plot_temperature_humidity(filtered_dataset)
     parallel_selector_html = plot_parallel_selector(filtered_dataset)
     _ = plot_similarity(dataset, start, end, OUTPUT_DIR)
+    _ = plot_gaussians(dataset, start, end, OUTPUT_DIR)
 
     with open(ACOUSTIC_SPECTRA_INFO, "r") as f:
         acoustic_spectra_info = f.read()
