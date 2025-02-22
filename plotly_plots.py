@@ -7,6 +7,7 @@ import webbrowser
 import plotly.express as px
 import pandas as pd
 from pathlib import Path
+from plotly.subplots import make_subplots
 
 from constants import *
 from preprocessing import load_dataset, download_csv_if_needed 
@@ -88,6 +89,9 @@ def plot_parallel_selector(ds, return_fig=False):
                     ),
             ])
         )
+    )
+    fig.update_layout(
+        margin=COMMON_MARGIN,
     )
 
     if return_fig:
@@ -176,55 +180,113 @@ def plot_acoustic_spectra(ds, start, end, return_fig=False):
         return rendered_html
 
 def plot_time_slider(ds, return_fig=False):
-    fig = go.Figure()
+    fig = make_subplots(
+        rows=2, 
+        cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.05,
+    )
+    
     all_sensors = np.unique(ds["sensor"].values)
     colors = px.colors.sample_colorscale("Portland", len(all_sensors))
 
     for i, sensor_id in enumerate(all_sensors):
-        filtered_dataset = ds.where(
+        filtered_ds = ds.where(
             ( ds.sensor == sensor_id ),
             drop=True,
             other=0
         )
-        if len(filtered_dataset['datetime']) == 0:
+        if len(filtered_ds['datetime']) == 0:
             continue
 
-        times = [
-            t.astimezone(HELSINKI_TZ)
-            for t in filtered_dataset['datetime'].values
-        ]
-
+        times = [t.astimezone(HELSINKI_TZ) for t in filtered_ds['datetime'].values]
+        
         fig.add_trace(
             go.Scatter(
                 x=times,
-                y=[0] * len(times),
-                mode='markers',
-                marker=dict(color=colors[i], size=8, opacity=0.5),
-                name=str(sensor_id),
-                hovertemplate='%{x}<extra></extra>'
-            )
+                y=filtered_ds.temperature.values,
+                mode='lines+markers',
+                marker=dict(
+                    symbol='diamond-tall',
+                    color=colors[i],
+                    size=6,
+                    opacity=0.5
+                ),
+                line=dict(
+                    shape='spline',
+                    color=colors[i],
+                    width=1,
+                ),
+                name=f'{sensor_id}',
+                legendgroup=f'sensor_{sensor_id}',
+                showlegend=True,
+                hovertemplate='%{x|%d %b %H:%M}<br>Temp: %{y:.1f}°C<extra></extra>'
+            ),
+            row=1, col=1
+        )
+        
+        fig.add_trace(
+            go.Scatter(
+                x=times,
+                y=filtered_ds.humidity.values,
+                mode='lines+markers',
+                marker=dict(
+                    symbol='circle',
+                    color=colors[i],
+                    size=6,
+                    opacity=0.5
+                ),
+                line=dict(
+                    shape='spline',
+                    color=colors[i],
+                    width=1,
+                ),
+                name=f'Sensor {sensor_id}',
+                legendgroup=f'sensor_{sensor_id}',
+                showlegend=False,
+                hovertemplate='%{x|%d %b %H:%M}<br>Humidity: %{y:.1f}%<extra></extra>'
+            ),
+            row=2, col=1
         )
 
     fig.update_layout(
-        xaxis=dict(
-            type='date',
-            rangeslider=dict(
-                visible=True,
-                thickness=0.2,
-            ),
-            tickfont=dict(size=10),
-            tickangle=0,
-            automargin=False,
-            gridwidth=2
-        ),
-        yaxis=dict(visible=False),
         hovermode='closest',
         dragmode='zoom',
-        height=300, 
         margin=COMMON_MARGIN,
         legend=LEGEND_CONFIG,
     )
-    fig.add_annotation(text="Time range selection", **ANNOTATION_DEFAULTS)
+
+    fig.update_layout(
+        margin=dict(l=50)
+    )
+
+    fig.update_yaxes(
+        title_text="Temp,°C",
+        title_font=dict(size=12),
+        row=1, col=1
+    )
+     
+    fig.update_yaxes(
+        title_text="Humidity, %",
+        title_font=dict(size=12),
+        row=2, col=1
+    )
+    
+    fig.update_xaxes(
+        type='date',
+        rangeslider=dict(
+            visible=True,
+            thickness=0.1,
+        ),
+        tickfont=dict(size=9),
+        tickangle=0,
+        row=2, col=1
+    )
+    
+    fig.add_annotation(
+        text="Time range selection", 
+        **{**ANNOTATION_DEFAULTS, 'y': 1.02}
+    )
 
     if return_fig:
         return fig
@@ -275,11 +337,11 @@ def plot_temperature_humidity(ds, return_fig=False):
                 #     smoothing=0.7,
                 # ),
                 hovertemplate=(
-                    '%{fullData.name}<br>'
+                    'Sensor %{fullData.name}<br>'
                     'Temperature: %{x:.1f}°C<br>'
                     'Humidity: %{y:.1f}%<br>'
-                    'DateTime: %{customdata[0]}<br>'
-                    'Ago from most recent datapoint: %{customdata[1]:.1f} h<extra></extra>'
+                    'DateTime: %{customdata[0]|%d %b %H:%M}<br>'
+                    'Ago from most recent: %{customdata[1]:.1f} h<extra></extra>'
                 ),
                 customdata=list(zip(
                     ['{}'.format(t.astimezone(HELSINKI_TZ)) for t in times],

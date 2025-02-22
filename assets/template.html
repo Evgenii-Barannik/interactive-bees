@@ -11,18 +11,18 @@
     <div id="update_mode_control" style="margin: 10px 0;">
         <label style="display: flex; align-items: center; gap: 8px; font-family: 'Open Sans', Verdana, Arial, sans-serif;">
             <input type="checkbox" id="continuous_update" name="continuous_update">
-            <span>Enable continuous updates</span>
+            <span>Enable continuous acoustic spectra updates</span>
         </label>
     </div>
-    <div id="time_slider_plot" class="slider-container">
+    <div id="time_slider_plot" class="plotly-container">
 	{{time_slider_plot}}
     </div>
     <div id="acoustic_spectra_plot" class="plotly-container">
 	{{acoustic_spectra_plot}}
     </div>
-    <div class="plotly-container">
-	{{temperature_humidity_plot}}
-    </div>
+	<!--   <div class="plotly-container">-->
+	<!--{{temperature_humidity_plot}}-->
+	<!--   </div>-->
     <div class="plotly-container">
         {{parallel_selector_plot}}
     </div>
@@ -42,10 +42,10 @@
 	<summary>About acoustic spectra</summary>
 	<pre style="white-space: pre-wrap">{{acoustic_spectra_info}}</pre>
     </details>
-    <details>
-	<summary>About temperature-humidity diagram</summary>
-	<pre style="white-space: pre-wrap">{{temperature_humidity_info}}</pre>
-    </details>
+	<!--   <details>-->
+	<!--<summary>About temperature-humidity diagram</summary>-->
+	<!--<pre style="white-space: pre-wrap">{{temperature_humidity_info}}</pre>-->
+	<!--   </details>-->
     <details>
         <summary>About acoustic similarity</summary>
         <pre style="white-space: pre-wrap">{{similarity_info}}</pre>
