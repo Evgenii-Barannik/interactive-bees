@@ -196,7 +196,7 @@ def plot_similarity(ds, start, end, output_path, name_overide=None):
             for epoch in np.array([t.timestamp() for t in measurement_datetimes]): # Dots for timestamps
                 ax.scatter(epoch, epoch, color='black', s=1)
 
-        annotation_to_place_on_plot = "Acoustic similarity measures for signal from sensor {}\n{}".format(
+        annotation_to_place_on_plot = "Similarity measures for acoustic data from sensor {}\n{}".format(
                 sensor_id,
                 get_info_total(filtered_by_timerange)
         )
@@ -246,25 +246,27 @@ FITTING_MODEL = [
             'type': 'peak',
             'center_range': (70, 155),
             'amplitude_guess': 70,
-            'fwhm_guess': 30
+            'fwhm_guess': 30,
         },
         {  
             'type': 'peak',
             'center_range': (175, 275),
             'amplitude_guess': 40,
-            'fwhm_guess': 60
+            'fwhm_guess': 60,
         },
         {  
             'type': 'peak',
             'center_range': (300, 350),
             'amplitude_guess': 40,
-            'fwhm_guess': 50
+            'fwhm_guess': 50,
+            'fwhm_max': 70
         },
         {  
             'type': 'peak',
             'center_range': (370, 440),
             'amplitude_guess': 20,
-            'fwhm_guess': 30
+            'fwhm_guess': 30,
+            'fwhm_max': 70
         },
         {  
             'type': 'peak',
@@ -340,7 +342,9 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
                 prefix = f'g{i}_'
                 params.add(f'{prefix}amplitude', value=cfg['amplitude_guess'], min=0)
                 params.add(f'{prefix}center', value=np.mean(cfg['center_range']), min=cfg['center_range'][0], max=cfg['center_range'][1])
-                params.add(f'{prefix}fwhm', value=cfg['fwhm_guess'], min=10, max=100)
+                params.add(f'{prefix}fwhm', value=cfg['fwhm_guess'], 
+                          min=cfg.get('fwhm_min', 10), 
+                          max=cfg.get('fwhm_max', 100))
         result = model.fit(y_masked, params, x=x_masked)
         
         components = result.eval_components(x=x_masked)
@@ -407,7 +411,7 @@ def plot_gauss_example():
             DATA_DIR
             )
     filtered_ds = load_dataset(csv_files, True, start, end)
-    gauss_plots = plot_gaussians(filtered_ds, OUTPUT_DIR, "gauss_example.png")
+    gauss_plots = plot_gaussians(filtered_ds, start, end, OUTPUT_DIR, "gauss_example.png")
     return gauss_plots
 
 if __name__ == "__main__":
