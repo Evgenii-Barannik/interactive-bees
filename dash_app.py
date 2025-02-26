@@ -1,16 +1,19 @@
-from pathlib import Path
-from dash import Dash, html, dcc, Output, Input
 import logging
+import webbrowser
+from pathlib import Path
+import numpy as np
+from dash import html, dcc, Output, Input, Dash 
+import dash_bootstrap_components as dbc
 
-from preprocessing import *
-from mpl_plots import *
-from plotly_plots import * 
 from constants import *
+from preprocessing import get_info_for_each_sensor, download_csv_if_needed, load_dataset
+from mpl_plots import plot_similarity
+from plotly_plots import plot_acoustic_spectra, plot_parallel_selector
 
 def create_app(dataset, global_start, global_end):
     app = Dash(__name__, assets_folder='assets')
-    sensors = dataset["sensor"].values
-    info_datapoints = get_info_about_all_datapoints(dataset, global_start, global_end)
+    sensors = np.unique(dataset["sensor"].values)
+    info_datapoints = get_info_for_each_sensor(dataset, global_start, global_end)
     with open(f'{ACOUSTIC_SPECTRA_INFO}') as f:
         info_acoustic_spectra = f.read()
     with open(f'{TEMPERATURE_HUMIDIY_INFO}') as f:
@@ -18,8 +21,8 @@ def create_app(dataset, global_start, global_end):
     with open(f'{SIMILARITY_INFO}') as f:
         info_distance = f.read()
 
-    start=global_start.astimezone(HELSINKI_TZ).replace(minute=0, second=0, microsecond=0)
-    end=global_end.astimezone(HELSINKI_TZ).replace(minute=0, second=0, microsecond=0) + pd.Timedelta(hours=1)
+    # start=global_start.astimezone(HELSINKI_TZ).replace(minute=0, second=0, microsecond=0)
+    # end=global_end.astimezone(HELSINKI_TZ).replace(minute=0, second=0, microsecond=0) + pd.Timedelta(hours=1)
 
     app.layout = html.Div([
             dcc.Graph(
@@ -116,17 +119,17 @@ def create_app(dataset, global_start, global_end):
     #         html.Div(f'To:\u00A0\u00A0\u00A0{t1}')
     #     ], style={'font-family': 'monospace'})
 
-    @app.callback(
-        Output('acoustic-spectra-plot', 'figure'),
-        Input('time-selector-plot', 'value')
-    )
-    def update_acoustic_spectra_plot(sliders_positions):
-        t0 = datetime_range[int(sliders_positions[0])]
-        t1 = datetime_range[int(sliders_positions[1])]
-        logging.info(f"Loading acoustic spectra for timerange:\n   FROM: {t0}\n   TO:   {t1}")
-        return plot_acoustic_spectra(dataset, t0, t1, return_fig=True)
-
-
+    # @app.callback(
+    #     Output('acoustic-spectra-plot', 'figure'),
+    #     Input('time-selector-plot', 'value')
+    # )
+    # def update_acoustic_spectra_plot(sliders_positions):
+    #     t0 = datetime_range[int(sliders_positions[0])]
+    #     t1 = datetime_range[int(sliders_positions[1])]
+    #     logging.info(f"Loading acoustic spectra for timerange:\n   FROM: {t0}\n   TO:   {t1}")
+    #     return plot_acoustic_spectra(dataset, t0, t1, return_fig=True)
+    #
+    #
     # @app.callback(
     #     Output('temperature-humidity-plot', 'figure'),
     #     Input('time-slider', 'value')
@@ -175,15 +178,15 @@ if __name__ == "__main__":
             global_end.astimezone(UTC_TZ),
             DATA_DIR
     ) 
-    dataset = load_dataset(csv_files)
+    filtered_dataset = load_dataset(csv_files)
 
     mpl_plot_pathnames = [(Path(OUTPUT_DIR) / f'similarity-measures-sensor-{sensor}.png') for sensor in sensors]
     mpl_plots_exist = all([p.exists() for p in mpl_plot_pathnames])
     if not mpl_plots_exist: # Local images can be out of date, but it makes rebuilds much faster
-        correlations = plot_similarity(dataset, global_start, global_end, OUTPUT_DIR)
+        correlations = plot_similarity(filtered_dataset, global_start, global_end, OUTPUT_DIR)
     else:
         logging.info(f"All similarity plots already exist.")
     
-    app = create_app(dataset, global_start, global_end)
+    app = create_app(filtered_dataset, global_start, global_end)
     webbrowser.open("http://127.0.0.1:8050/", new=1, autoraise=True)
     app.run_server(debug=True)

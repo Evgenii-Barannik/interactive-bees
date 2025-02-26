@@ -4,67 +4,75 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
     <link href="assets/styles.css" rel="stylesheet">
 </head>
+
 <body class="main-container">
     <h3 class="title" style="text-align: center;">
         Beehive sensor data
     </h3>
-    <div id="update_mode_control" style="margin: 10px 0;">
-        <label style="display: flex; align-items: center; gap: 8px; font-family: 'Open Sans', Verdana, Arial, sans-serif;">
-            <input type="checkbox" id="continuous_update" name="continuous_update">
-            <span>Enable continuous acoustic spectra updates</span>
+
+    <div id="update_mode_control">
+	<label>
+            <input type="checkbox" id="continuous_update">
+            Enable continuous acoustic spectra updates
         </label>
     </div>
-    <div id="time_slider_plot" class="plotly-container">
-	{{time_slider_plot}}
-    </div>
-    <div id="acoustic_spectra_plot" class="plotly-container">
-	{{acoustic_spectra_plot}}
-    </div>
 
-	<!--   <div class="plotly-container">-->
-	<!--{{temperature_humidity_plot}}-->
-	<!--   </div>-->
+    <div class="toggle-container">
+        <label>
+            <input type="checkbox" id="layoutToggle">
+	    Use two column layout
+        </label>
+    </div>
+    
+    <div class="row">
+	  <div class="column">
+		<div id="acoustic_spectra_plot">
+		{{acoustic_spectra_plot}}
+	       </div>
+	  </div>
 
-    <div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
-            <div class="title">Gaussian fit</div>
-            <select id="gaussImageSelector" style="width: 100px; margin-right: 20px;">
-                {% for sensor in sensors %}
-                <option value="{{OUTPUT_DIR}}/gaussians-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <img id="displayedGaussImage" class="image-container" src="{{OUTPUT_DIR}}/gaussians-sensor-{{sensors[0]}}.png" alt="Gaussian decomposition">
+	  <div class="column">
+		<div id="time_slider_plot">
+		    {{time_slider_plot}}
+	       </div>
+	  </div>
+
+	  <div class="column">
+	    <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
+		<div class="title">Gaussian fit</div>
+		<select id="gaussImageSelector" style="width: 100px; margin-right: 20px;">
+		    {% for sensor in sensors %}
+		    <option value="{{OUTPUT_DIR}}/gaussians-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
+		    {% endfor %}
+		</select>
+	    </div>
+	    <img id="displayedGaussImage" class="image-container" src="{{OUTPUT_DIR}}/gaussians-sensor-{{sensors[0]}}.png" alt="Gaussian decomposition">
+	    </div>
+
+	  <div class="column">
+	    <div class="plotly-container">
+		{{parallel_selector_plot}}
+	    </div>
+	  </div> 
     </div>
 
     <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
             <div class="title">Acoustic similarity</div>
-            <select id="imageSelector" style="width: 100px; margin-right: 20px;">
+            <select id="similarityImageSelector" style="width: 100px; margin-right: 20px;">
                 {% for sensor in sensors %}
                 <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
                 {% endfor %}
             </select>
         </div>
-        <img id="displayedImage" class="image-container" src="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensors[0]}}.png" alt="Similarity measures">
+        <img id="displayedSimilarityImage" class="image-container" src="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensors[0]}}.png" alt="Similarity measures">
     </div>
 
-    <div class="plotly-container">
-        {{parallel_selector_plot}}
-    </div>
 
     <details>
 	<summary>About acoustic spectra</summary>
 	<pre style="white-space: pre-wrap">{{acoustic_spectra_info}}</pre>
     </details>
-	<!--   <details>-->
-	<!--<summary>About temperature-humidity diagram</summary>-->
-	<!--<pre style="white-space: pre-wrap">{{temperature_humidity_info}}</pre>-->
-	<!--   </details>-->
-    <!--<details>-->
-    <!--    <summary>About Gaussian decomposition</summary>-->
-    <!--    <pre style="white-space: pre-wrap">{{gauss_info}}</pre>-->
-    <!--</details>-->
     <details>
         <summary>About acoustic similarity</summary>
         <pre style="white-space: pre-wrap">{{similarity_info}}</pre>
@@ -77,14 +85,36 @@
         const gaussImageSelector = document.getElementById('gaussImageSelector');
         const displayedGaussImage = document.getElementById('displayedGaussImage');
         gaussImageSelector.addEventListener('change', function() {
+            console.log('Gauss image selector changed. Now pointing to: ', this.value);
             displayedGaussImage.src = this.value;
         });
 
-        const imageSelector = document.getElementById('imageSelector');
-        const displayedImage = document.getElementById('displayedImage');
-        imageSelector.addEventListener('change', function() {
-            displayedImage.src = this.value;
-        });
+        const similarityImageSelector = document.getElementById('similarityImageSelector');
+        const displayedSimilarityImage = document.getElementById('displayedSimilarityImage');
+        similarityImageSelector.addEventListener('change', function() {
+            console.log('Similarity image selector changed. Now pointing to: ', this.value);
+		    displayedSimilarityImage.src = this.value;
+	    });
+
+	document.getElementById('layoutToggle').addEventListener('change', async function() {
+		document.body.classList.toggle('two-columns', this.checked);
+		await forcePlotlyResize();
+	});
+
+	async function forcePlotlyResize() {
+	    const plots = document.querySelectorAll('.js-plotly-plot');
+	    const promisesToResize = [];
+	    
+	    for (const plot of plots) {
+	        if (plot.data) {
+	            promisesToResize.push(Plotly.Plots.resize(plot));
+	        }
+	    }
+	    
+	    await Promise.all(promisesToResize);
+	    // Re-initialize event handlers after resize
+	    initSpectraHandlers();
+	}
     </script>
     <script src="{{OUTPUT_DIR}}/spectra_callback.js?v={{version}}"></script>
 </body>

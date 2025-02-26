@@ -26,3 +26,17 @@
 .sensor-selector {
     min-width: 150px;
 }
+
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.column {
+    width: 100%;
+}
+
+.two-columns .column {
+    width: 50%;
+}
