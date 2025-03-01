@@ -37,47 +37,43 @@
 	   </div>
       </div>
    </div>
+  
+	  <div class="column">
+	    <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
+		<div class="title">Gaussian fit</div>
+		<select id="gaussImageSelector" style="width: 100px; margin-right: 20px;">
+		    {% for sensor in sensors %}
+		    <option value="{{OUTPUT_DIR}}/gaussians-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
+		    {% endfor %}
+		</select>
+	    </div>
+	    <img id="displayedGaussImage" class="image-container" src="{{OUTPUT_DIR}}/gaussians-sensor-{{sensors[0]}}.png" alt="Gaussian decomposition">
+	    </div>
 
-    <div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
-            <div class="title">Gaussian fit</div>
-            <select id="gaussImageSelector" style="width: 100px; margin-right: 20px;">
-                {% for sensor in sensors %}
-                <option value="{{OUTPUT_DIR}}/gaussians-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <img id="displayedGaussImage" class="image-container" src="{{OUTPUT_DIR}}/gaussians-sensor-{{sensors[0]}}.png" alt="Gaussian decomposition">
+	  <div class="column">
+	    <div class="plotly-container">
+		{{parallel_selector_plot}}
+	    </div>
+	  </div> 
     </div>
 
     <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
             <div class="title">Acoustic similarity</div>
-            <select id="imageSelector" style="width: 100px; margin-right: 20px;">
+            <select id="similarityImageSelector" style="width: 100px; margin-right: 20px;">
                 {% for sensor in sensors %}
                 <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
                 {% endfor %}
             </select>
         </div>
-        <img id="displayedImage" class="image-container" src="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensors[0]}}.png" alt="Similarity measures">
+        <img id="displayedSimilarityImage" class="image-container" src="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensors[0]}}.png" alt="Similarity measures">
     </div>
 
-    <div class="plotly-container">
-        {{parallel_selector_plot}}
-    </div>
 
     <details>
 	<summary>About acoustic spectra</summary>
 	<pre style="white-space: pre-wrap">{{acoustic_spectra_info}}</pre>
     </details>
-	<!--   <details>-->
-	<!--<summary>About temperature-humidity diagram</summary>-->
-	<!--<pre style="white-space: pre-wrap">{{temperature_humidity_info}}</pre>-->
-	<!--   </details>-->
-    <!--<details>-->
-    <!--    <summary>About Gaussian decomposition</summary>-->
-    <!--    <pre style="white-space: pre-wrap">{{gauss_info}}</pre>-->
-    <!--</details>-->
     <details>
         <summary>About acoustic similarity</summary>
         <pre style="white-space: pre-wrap">{{similarity_info}}</pre>
@@ -86,6 +82,7 @@
         <summary>About datapoints used</summary>
         <pre style="white-space: pre-wrap">{{datapoints_info}}</pre>
     </details>
+
     <script src="{{OUTPUT_DIR}}/spectra_callback.js?v={{version}}"></script>
 </body>
 </html>

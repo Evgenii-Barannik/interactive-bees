@@ -3,7 +3,6 @@
 // by re-computing the average of the raw spectra within the selected time range.
 
 function setup_spectra_updates() {
-
     function getValidRange(eventData) {
         if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
             return [
@@ -167,23 +166,12 @@ document.getElementById('layoutToggle').addEventListener('change', async functio
     document.body.classList.toggle('two-columns', this.checked);
     var plots = document.querySelectorAll('.js-plotly-plot');
     console.log("Layout change triggered. Current plotly plots: ", plots)
-    // Enable continuous acoustic spectra updates breaks after code below, i have tested it.
-    // Also Relayout event are no longer printed in shell.
+    // This is mocking of resize event to update sizes of graphs
+    window.dispatchEvent(new Event('resize'));
+    // Code below will also resize plots, but will breaks continious plot acoutic plot updates.
+    // Also Relayout event will no longer logged.
     //for (var plot of plots) {
     //    Plotly.Plots.resize(plot);
     //}
 });
-
-//async function forcePlotlyResize() {
-//    const plots = document.querySelectorAll('.js-plotly-plot');
-//    const promisesToResize = [];
-//
-//    for (const plot of plots) {
-//	if (plot.data) {
-//	    promisesToResize.push(Plotly.Plots.resize(plot));
-//	}
-//    }
-//    await Promise.all(promisesToResize);
-//}
-
 setup_spectra_updates()
