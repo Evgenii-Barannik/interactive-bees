@@ -25,6 +25,7 @@
     </div>
 
     <div class="row">
+   <!-- -->
       <div class="column">
 	    <div id="acoustic_spectra_plot", class="plotly-container">
 		{{acoustic_spectra_plot}}
@@ -36,40 +37,47 @@
 		{{time_slider_plot}}
 	   </div>
       </div>
+   <!-- -->
    </div>
-  
-	  <div class="column">
-	    <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
-		<div class="title">Gaussian fit</div>
-		<select id="gaussImageSelector" style="width: 100px; margin-right: 20px;">
-		    {% for sensor in sensors %}
-		    <option value="{{OUTPUT_DIR}}/gaussians-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
-		    {% endfor %}
-		</select>
-	    </div>
-	    <img id="displayedGaussImage" class="image-container" src="{{OUTPUT_DIR}}/gaussians-sensor-{{sensors[0]}}.png" alt="Gaussian decomposition">
-	    </div>
 
-	  <div class="column">
-	    <div class="plotly-container">
+    <div class="row">
+   <!-- -->
+      <div class="column">
+	  <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
+	      <div class="title">Gaussian fit</div>
+	      <select id="gaussImageSelector" style="width: 100px; margin-right: 20px;">
+		  {% for sensor in sensors %}
+		  <option value="{{OUTPUT_DIR}}/gaussians-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
+		  {% endfor %}
+	      </select>
+	  </div>
+	  <img id="displayedGaussImage" class="image-container" src="{{OUTPUT_DIR}}/gaussians-sensor-{{sensors[0]}}.png" alt="Gaussian decomposition">
+      </div>
+
+      <div class="column">
+	    <div id="time_slider_plot", class="plotly-container">
 		{{parallel_selector_plot}}
 	    </div>
-	  </div> 
-    </div>
+      </div>
+   <!-- -->
+   </div>
 
     <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
             <div class="title">Acoustic similarity</div>
-            <select id="similarityImageSelector" style="width: 100px; margin-right: 20px;">
+            <select id="imageSelector" style="width: 100px; margin-right: 20px;">
                 {% for sensor in sensors %}
                 <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
                 {% endfor %}
             </select>
         </div>
-        <img id="displayedSimilarityImage" class="image-container" src="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensors[0]}}.png" alt="Similarity measures">
+        <img id="displayedImage" class="image-container" src="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensors[0]}}.png" alt="Similarity measures">
     </div>
 
-
+    <!--<details>-->
+    <!--    <summary>About Gaussian decomposition</summary>-->
+    <!--    <pre style="white-space: pre-wrap">{{gauss_info}}</pre>-->
+    <!--</details>-->
     <details>
 	<summary>About acoustic spectra</summary>
 	<pre style="white-space: pre-wrap">{{acoustic_spectra_info}}</pre>
@@ -82,7 +90,6 @@
         <summary>About datapoints used</summary>
         <pre style="white-space: pre-wrap">{{datapoints_info}}</pre>
     </details>
-
     <script src="{{OUTPUT_DIR}}/spectra_callback.js?v={{version}}"></script>
 </body>
 </html>

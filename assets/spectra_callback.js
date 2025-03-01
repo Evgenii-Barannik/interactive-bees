@@ -166,10 +166,10 @@ document.getElementById('layoutToggle').addEventListener('change', async functio
     document.body.classList.toggle('two-columns', this.checked);
     var plots = document.querySelectorAll('.js-plotly-plot');
     console.log("Layout change triggered. Current plotly plots: ", plots)
-    // This is mocking of resize event to update sizes of graphs
+    // Mocking of a resize event, that is used to update sizes of plots:
     window.dispatchEvent(new Event('resize'));
-    // Code below will also resize plots, but will breaks continious plot acoutic plot updates.
-    // Also Relayout event will no longer logged.
+    // Code below will also resize plots, but will also break continious plot acoutic plot updates.
+    // Also Relayout event will no longer be logged.
     //for (var plot of plots) {
     //    Plotly.Plots.resize(plot);
     //}
