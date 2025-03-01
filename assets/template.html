@@ -23,20 +23,21 @@
 	    Use two column layout
         </label>
     </div>
-    
+
     <div class="row">
-	  <div class="column">
-		<div id="acoustic_spectra_plot">
+      <div class="column">
+	    <div id="acoustic_spectra_plot", class="plotly-container">
 		{{acoustic_spectra_plot}}
-	       </div>
-	  </div>
+	   </div>
+      </div>
 
-	  <div class="column">
-		<div id="time_slider_plot">
-		    {{time_slider_plot}}
-	       </div>
-	  </div>
-
+      <div class="column">
+	    <div id="time_slider_plot", class="plotly-container">
+		{{time_slider_plot}}
+	   </div>
+      </div>
+   </div>
+  
 	  <div class="column">
 	    <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
 		<div class="title">Gaussian fit</div>
@@ -81,41 +82,7 @@
         <summary>About datapoints used</summary>
         <pre style="white-space: pre-wrap">{{datapoints_info}}</pre>
     </details>
-    <script>
-        const gaussImageSelector = document.getElementById('gaussImageSelector');
-        const displayedGaussImage = document.getElementById('displayedGaussImage');
-        gaussImageSelector.addEventListener('change', function() {
-            console.log('Gauss image selector changed. Now pointing to: ', this.value);
-            displayedGaussImage.src = this.value;
-        });
 
-        const similarityImageSelector = document.getElementById('similarityImageSelector');
-        const displayedSimilarityImage = document.getElementById('displayedSimilarityImage');
-        similarityImageSelector.addEventListener('change', function() {
-            console.log('Similarity image selector changed. Now pointing to: ', this.value);
-		    displayedSimilarityImage.src = this.value;
-	    });
-
-	document.getElementById('layoutToggle').addEventListener('change', async function() {
-		document.body.classList.toggle('two-columns', this.checked);
-		await forcePlotlyResize();
-	});
-
-	async function forcePlotlyResize() {
-	    const plots = document.querySelectorAll('.js-plotly-plot');
-	    const promisesToResize = [];
-	    
-	    for (const plot of plots) {
-	        if (plot.data) {
-	            promisesToResize.push(Plotly.Plots.resize(plot));
-	        }
-	    }
-	    
-	    await Promise.all(promisesToResize);
-	    // Re-initialize event handlers after resize
-	    initSpectraHandlers();
-	}
-    </script>
     <script src="{{OUTPUT_DIR}}/spectra_callback.js?v={{version}}"></script>
 </body>
 </html>
