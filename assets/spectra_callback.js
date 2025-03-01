@@ -2,29 +2,7 @@
 // This script listens for changes in the time slider plot and updates the acoustic spectra plot
 // by re-computing the average of the raw spectra within the selected time range.
 
-(function() {
-    const timeSliderContainer = document.getElementById('time_slider_plot');
-    const spectraPlotElem = document.querySelector('#acoustic_spectra_plot .js-plotly-plot');
-
-    if (!timeSliderContainer || !spectraPlotElem) {
-        console.error("Required elements not found");
-        return;
-    }
-
-    const timeSlider = timeSliderContainer.querySelector('.js-plotly-plot');
-    if (!timeSlider) {
-        console.error("Time slider graph element not found");
-        return;
-    }
-
-    const continuousUpdateCheckbox = document.getElementById('continuous_update');
-    if (!continuousUpdateCheckbox) {
-        console.error("Continuous update checkbox not found");
-        return;
-    }
-
-    let isInteracting = false;
-    let lastRange = null;
+function setup_spectra_updates() {
 
     function getValidRange(eventData) {
         if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
@@ -33,26 +11,22 @@
                 eventData['xaxis.range[1]']
             ];
         }
-        
         const xaxis = timeSlider.layout.xaxis;
         if (xaxis && xaxis.range) {
             return [...xaxis.range];
         }
-        
         return lastRange;
     }
 
     function handleRelayout(eventData) {
         const newRange = getValidRange(eventData);
         if (!newRange) return;
-        
         if (lastRange && 
             newRange[0] === lastRange[0] && 
             newRange[1] === lastRange[1]) {
             return;
         }
         lastRange = newRange;
-
         if (!isInteracting || continuousUpdateCheckbox.checked) {
             console.log('Relayout event:', {
                 eventData,
@@ -82,12 +56,35 @@
                 timestamp: new Date().toISOString(),
                 duration: newRange ? `${new Date(newRange[1]) - new Date(newRange[0])}ms` : null
             });
-            
             if (newRange) {
                 updateSpectraPlot(newRange, spectraPlotElem);
             }
         }
     }
+
+    const timeSliderContainer = document.getElementById('time_slider_plot');
+    const spectraPlotElem = document.querySelector('#acoustic_spectra_plot .js-plotly-plot');
+
+    if (!timeSliderContainer || !spectraPlotElem) {
+        console.error("Required elements not found");
+        return;
+    }
+
+    const timeSlider = timeSliderContainer.querySelector('.js-plotly-plot');
+    if (!timeSlider) {
+        console.error("Time slider graph element not found");
+        return;
+    }
+
+    const continuousUpdateCheckbox = document.getElementById('continuous_update');
+    if (!continuousUpdateCheckbox) {
+        console.error("Continuous update checkbox not found");
+        return;
+    }
+
+    let isInteracting = false;
+    let lastRange = null;
+
 
     timeSlider.addEventListener('mousedown', handleInteractionStart);
     document.addEventListener('mouseup', handleInteractionEnd);
@@ -151,5 +148,42 @@
         // Update all traces in the acoustic spectra plot.
         Plotly.restyle(spectraPlot, { y: updateY });
     }
-})();
+};
 
+const gaussImageSelector = document.getElementById('gaussImageSelector');
+const displayedGaussImage = document.getElementById('displayedGaussImage');
+gaussImageSelector.addEventListener('change', function() {
+    displayedGaussImage.src = this.value;
+});
+
+const imageSelector = document.getElementById('imageSelector');
+const displayedImage = document.getElementById('displayedImage');
+imageSelector.addEventListener('change', function() {
+    displayedImage.src = this.value;
+});
+
+
+document.getElementById('layoutToggle').addEventListener('change', async function() {
+    document.body.classList.toggle('two-columns', this.checked);
+    var plots = document.querySelectorAll('.js-plotly-plot');
+    console.log("Layout change triggered. Current plotly plots: ", plots)
+    // Enable continuous acoustic spectra updates breaks after code below, i have tested it.
+    // Also Relayout event are no longer printed in shell.
+    //for (var plot of plots) {
+    //    Plotly.Plots.resize(plot);
+    //}
+});
+
+//async function forcePlotlyResize() {
+//    const plots = document.querySelectorAll('.js-plotly-plot');
+//    const promisesToResize = [];
+//
+//    for (const plot of plots) {
+//	if (plot.data) {
+//	    promisesToResize.push(Plotly.Plots.resize(plot));
+//	}
+//    }
+//    await Promise.all(promisesToResize);
+//}
+
+setup_spectra_updates()

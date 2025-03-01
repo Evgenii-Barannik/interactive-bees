@@ -3,24 +3,24 @@ CSV file already exists: data/sensor_116_from_2025-02-12_to_2025-02-16.csv
 Spectra for sensor 109: (14.51-1485.49 Hz) (2028 bins)
 Spectra for sensor 116: (14.51-1485.49 Hz) (2028 bins)
 
-<xarray.Dataset> Size: 27kB
+<xarray.Dataset>
 Dimensions:                   (index: 243)
 Coordinates:
-  * index                     (index) int64 2kB 0 1 2 3 4 ... 239 240 241 242
+  * index                     (index) int64 0 1 2 3 4 5 ... 238 239 240 241 242
 Data variables: (12/13)
-    datetime                  (index) object 2kB 2025-02-12T00:19:43+00:00 .....
-    sensor                    (index) int64 2kB 109 109 109 109 ... 116 116 116
-    sensor_type               (index) int64 2kB 48 48 48 48 48 ... 48 48 48 48
-    sensor_pack               (index) int64 2kB 202 203 204 206 ... 86 87 88 89
-    base                      (index) int64 2kB 115 114 114 115 ... 114 114 114
-    temperature               (index) float64 2kB -0.33 -0.53 ... -10.7 -10.76
+    datetime                  (index) object 2025-02-12T00:19:43+00:00 ... 20...
+    sensor                    (index) int64 109 109 109 109 ... 116 116 116 116
+    sensor_type               (index) int64 48 48 48 48 48 48 ... 48 48 48 48 48
+    sensor_pack               (index) int64 202 203 204 206 208 ... 86 87 88 89
+    base                      (index) int64 115 114 114 115 ... 114 114 114 114
+    temperature               (index) float64 -0.33 -0.53 -0.23 ... -10.7 -10.76
     ...                        ...
-    spectrum_length           (index) int64 2kB 2028 2028 2028 ... 2028 2028
-    frequency_scaling_factor  (index) float64 2kB 0.7257 0.7257 ... 0.7257
-    frequency_min             (index) float64 2kB 14.51 14.51 ... 14.51 14.51
-    frequency_max             (index) float64 2kB 1.485e+03 ... 1.485e+03
-    frequency_start_index     (index) int64 2kB 20 20 20 20 20 ... 20 20 20 20
-    spectrum                  (index) object 2kB [0.036340438496363765, 0.041...
+    spectrum_length           (index) int64 2028 2028 2028 ... 2028 2028 2028
+    frequency_scaling_factor  (index) float64 0.7257 0.7257 ... 0.7257 0.7257
+    frequency_min             (index) float64 14.51 14.51 14.51 ... 14.51 14.51
+    frequency_max             (index) float64 1.485e+03 1.485e+03 ... 1.485e+03
+    frequency_start_index     (index) int64 20 20 20 20 20 20 ... 20 20 20 20 20
+    spectrum                  (index) object [0.036340438496363765, 0.0419017...
 Memory used for dataset: 0.026 MB
 Type used for sensor: <class 'numpy.int64'>
 Type used for datetime: <class 'pandas._libs.tslibs.timestamps.Timestamp'>
@@ -31,24 +31,24 @@ Last DateTime in dataset (Helsinki):  2025-02-17 01:58:53+02:00
 Spectra for sensor 109: (14.51-1485.49 Hz) (2028 bins)
 Spectra for sensor 116: (14.51-1485.49 Hz) (2028 bins)
 
-<xarray.Dataset> Size: 22kB
+<xarray.Dataset>
 Dimensions:                   (index: 199)
 Coordinates:
-  * index                     (index) int64 2kB 20 21 22 23 ... 236 237 238 239
+  * index                     (index) int64 20 21 22 23 24 ... 236 237 238 239
 Data variables: (12/13)
-    datetime                  (index) object 2kB 2025-02-12T22:32:39+00:00 .....
-    sensor                    (index) int64 2kB 109 109 109 109 ... 116 116 116
-    sensor_type               (index) int64 2kB 48 48 48 48 48 ... 48 48 48 48
-    sensor_pack               (index) int64 2kB 225 226 227 228 ... 83 84 85 86
-    base                      (index) int64 2kB 114 114 114 115 ... 115 114 114
-    temperature               (index) float64 2kB -1.48 -1.82 ... -9.2 -9.88
+    datetime                  (index) object 2025-02-12T22:32:39+00:00 ... 20...
+    sensor                    (index) int64 109 109 109 109 ... 116 116 116 116
+    sensor_type               (index) int64 48 48 48 48 48 48 ... 48 48 48 48 48
+    sensor_pack               (index) int64 225 226 227 228 229 ... 83 84 85 86
+    base                      (index) int64 114 114 114 115 ... 114 115 114 114
+    temperature               (index) float64 -1.48 -1.82 -2.28 ... -9.2 -9.88
     ...                        ...
-    spectrum_length           (index) int64 2kB 2028 2028 2028 ... 2028 2028
-    frequency_scaling_factor  (index) float64 2kB 0.7257 0.7257 ... 0.7257
-    frequency_min             (index) float64 2kB 14.51 14.51 ... 14.51 14.51
-    frequency_max             (index) float64 2kB 1.485e+03 ... 1.485e+03
-    frequency_start_index     (index) int64 2kB 20 20 20 20 20 ... 20 20 20 20
-    spectrum                  (index) object 2kB [0.028023508053160846, 0.037...
+    spectrum_length           (index) int64 2028 2028 2028 ... 2028 2028 2028
+    frequency_scaling_factor  (index) float64 0.7257 0.7257 ... 0.7257 0.7257
+    frequency_min             (index) float64 14.51 14.51 14.51 ... 14.51 14.51
+    frequency_max             (index) float64 1.485e+03 1.485e+03 ... 1.485e+03
+    frequency_start_index     (index) int64 20 20 20 20 20 20 ... 20 20 20 20 20
+    spectrum                  (index) object [0.028023508053160846, 0.0375172...
 Memory used for dataset: 0.021 MB
 Type used for sensor: <class 'numpy.int64'>
 Type used for datetime: <class 'pandas._libs.tslibs.timestamps.Timestamp'>
