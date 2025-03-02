@@ -351,11 +351,11 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
         
         _, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), gridspec_kw={'height_ratios': [3, 1]}, sharex=True)
 
-        ax1.set_ylabel('Amplitude', fontsize=14)
+        ax1.set_ylabel('Amplitude, %', fontsize=14)
         ax1.tick_params(axis='both', which='major', labelsize=12, length=6, width=1.5)
         
-        ax2.set_xlabel('Frequency (Hz)', fontsize=14)
-        ax2.set_ylabel('Residuals', fontsize=14)
+        ax2.set_xlabel('Frequency, Hz', fontsize=14)
+        ax2.set_ylabel('Residuals, %', fontsize=14)
         ax2.tick_params(axis='both', labelsize=12, length=6, width=1.5)
         
         ax1.plot(x_full, y_full, 'b-', label='Acoustic spectrum')
@@ -423,8 +423,8 @@ if __name__ == "__main__":
         ]
     )
 
-    similarity_example = plot_similarity_example()
-    show_image(similarity_example[0])
+    # similarity_example = plot_similarity_example()
+    # show_image(similarity_example[0])
     gauss_example = plot_gauss_example()
     show_image(gauss_example[0])
 

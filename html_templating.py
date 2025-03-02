@@ -31,7 +31,7 @@ if __name__ == "__main__":
     
     start = HELSINKI_4DAYS_AGO
     end = HELSINKI_NOW
-    sensors = [21, 109, 116]
+    sensors = [109, 116]
   
     # Code section bellow will check if required HTML pieces very already created.
     # It will skip a lot of time on the seconds run because it does not try to recreate existing HTML pieces.
@@ -59,24 +59,19 @@ if __name__ == "__main__":
         dataset = load_dataset(csv_files)
 
         acoustic_spectra_html = plot_acoustic_spectra(dataset, start, end)
-        temperature_humidity_html = plot_temperature_humidity(dataset)
         time_slider_html = plot_time_slider(dataset)
         parallel_selector_html = plot_parallel_selector(dataset)
         _ = plot_similarity(dataset, start, end, OUTPUT_DIR)
         _ = plot_gaussians(dataset, OUTPUT_DIR)
     with open(ACOUSTIC_SPECTRA_INFO, "r") as f:
         acoustic_spectra_info = f.read()
-    with open(TEMPERATURE_HUMIDIY_INFO, "r") as f:
-        temperature_humidity_info = f.read()
     with open(SIMILARITY_INFO, "r") as f:
         similarity_info = f.read()
 
     html_data = {
-        "time_slider_plot": time_slider_html,
         "acoustic_spectra_plot" : acoustic_spectra_html,
         "acoustic_spectra_info" : acoustic_spectra_info,
-        "temperature_humidity_plot": temperature_humidity_html,
-        "temperature_humidity_info": temperature_humidity_info,
+        "time_slider_plot": time_slider_html,
         "parallel_selector_plot": parallel_selector_html,
         "similarity_info": similarity_info,
         "sensors": sensors,

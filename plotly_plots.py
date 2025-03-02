@@ -155,7 +155,7 @@ def plot_acoustic_spectra(ds, start, end, return_fig=False):
             gridwidth=2
         ),
         yaxis=dict(
-            title='Relative Amplitude, %',
+            title='Amplitude, %',
             range=[0, 100],
             tickangle=0,
             gridwidth=2
@@ -271,7 +271,7 @@ def plot_time_slider(ds, return_fig=False):
     )
 
     fig.update_yaxes(
-        title_text="Temp,°C",
+        title_text="Temperature,°C",
         title_font=dict(size=12),
         row=1, col=1
     )
@@ -360,7 +360,7 @@ def plot_temperature_humidity(ds, return_fig=False):
     
     fig.update_layout(
         xaxis_title='Temperature, °C',
-        yaxis_title='Relative Humidity, %',
+        yaxis_title='Humidity, %',
         xaxis=dict(gridwidth=2),
         yaxis=dict(gridwidth=2),
         hovermode='closest',
