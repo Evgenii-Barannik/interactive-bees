@@ -62,7 +62,7 @@ if __name__ == "__main__":
         time_slider_html = plot_time_slider(dataset)
         parallel_selector_html = plot_parallel_selector(dataset)
         _ = plot_similarity(dataset, start, end, OUTPUT_DIR)
-        _ = plot_gaussians(dataset, OUTPUT_DIR)
+        _ = plot_gaussians(dataset, start, end, OUTPUT_DIR)
     with open(ACOUSTIC_SPECTRA_INFO, "r") as f:
         acoustic_spectra_info = f.read()
     with open(SIMILARITY_INFO, "r") as f:

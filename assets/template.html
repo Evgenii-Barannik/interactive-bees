@@ -24,6 +24,23 @@
         </label>
     </div>
 
+    <!-- Audio controls for playing sounds from acoustic spectra
+         - 'Play Audio' button generates sound from the current acoustic spectrum of the selected sensor
+         - 'Stop' button stops any currently playing sound
+         - You can also click directly on a frequency in the spectrum to hear that specific tone
+    -->
+    <div class="audio-controls-container">
+	<br>Play sound for shown acoustic spectrum:<br>
+	<select id="audioSensorSelector">	
+	    {% for sensor in sensors %}
+	    <option value="{{sensor}}">Sensor {{sensor}}</option>
+	    {% endfor %}
+	</select>
+	<button id="playSpectrumButton" class="play-button">Play</button>
+	<button id="stopButton" class="play-button">Stop</button>
+        <div id="audioDebugInfo" style="white-space: pre-line;"></div>
+    </div>
+
     <div class="row">
    <!-- -->
       <div class="column">
@@ -91,5 +108,6 @@
         <pre style="white-space: pre-wrap">{{datapoints_info}}</pre>
     </details>
     <script src="{{OUTPUT_DIR}}/spectra_callback.js?v={{version}}"></script>
+    <script src="{{OUTPUT_DIR}}/playing_audio.js?v={{version}}"></script>
 </body>
 </html>

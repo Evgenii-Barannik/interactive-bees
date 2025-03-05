@@ -1,7 +1,3 @@
-// spectra_callback.js
-// This script listens for changes in the time slider plot and updates the acoustic spectra plot
-// by re-computing the average of the raw spectra within the selected time range.
-
 function setup_spectra_updates() {
     function getValidRange(eventData) {
         if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
