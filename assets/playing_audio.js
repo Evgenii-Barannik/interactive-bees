@@ -91,9 +91,10 @@ function formatDate(date) {
         return date.toISOString().replace('T', ' ').substr(0, 19);
 }
 
-// Function to play sound from current acoustic spectrum
+// Play sound created from current acoustic spectrum
 function playSound() {
     const sensor = document.getElementById('audioSensorSelector').value;
+    var start = performance.now();
     console.log(`Preparing sound for sensor ${sensor}`);
 
     const spectraPlot = document.querySelector('#acoustic_spectra_plot .js-plotly-plot');
@@ -173,6 +174,9 @@ function playSound() {
     }
     
     document.getElementById('audioDebugInfo').textContent = debugInfo;
+    var end = performance.now();
+    var duration = end - start;
+    console.log('Sound preparation took', duration, ' ms')
 }
 
 document.addEventListener('DOMContentLoaded', function() {

@@ -19,8 +19,10 @@ if __name__ == "__main__":
     )
 
     sensors = [109, 116]
-    start = datetime(2025, 2, 13, 0, tzinfo = HELSINKI_TZ)
-    end = datetime(2025, 2, 17, 0, 0, tzinfo = HELSINKI_TZ)
+    # start = datetime(2025, 2, 13, 0, tzinfo = HELSINKI_TZ)
+    # end = datetime(2025, 2, 17, 0, 0, tzinfo = HELSINKI_TZ)
+    start = HELSINKI_2DAYS_AGO
+    end = HELSINKI_NOW 
 
     csv_files = download_csv_if_needed(
             sensors,

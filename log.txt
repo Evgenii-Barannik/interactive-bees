@@ -1,30 +1,91 @@
-CSV file already exists: data/sensor_109_from_2025-02-12_to_2025-02-16.csv
-CSV file already exists: data/sensor_116_from_2025-02-12_to_2025-02-16.csv
+CSV file already exists: data/sensor_109_from_2025-03-06_to_2025-03-08.csv
+CSV file already exists: data/sensor_116_from_2025-03-06_to_2025-03-08.csv
 Spectra for sensor 109: (14.51-1485.49 Hz) (2028 bins)
 Spectra for sensor 116: (14.51-1485.49 Hz) (2028 bins)
 
 <xarray.Dataset>
-Dimensions:                   (index: 243)
+Dimensions:                   (index: 122)
 Coordinates:
-  * index                     (index) int64 0 1 2 3 4 5 ... 238 239 240 241 242
+  * index                     (index) int64 0 1 2 3 4 5 ... 117 118 119 120 121
 Data variables: (12/13)
-    datetime                  (index) object 2025-02-12T00:19:43+00:00 ... 20...
+    datetime                  (index) object 2025-03-06T00:06:30+00:00 ... 20...
     sensor                    (index) int64 109 109 109 109 ... 116 116 116 116
     sensor_type               (index) int64 48 48 48 48 48 48 ... 48 48 48 48 48
-    sensor_pack               (index) int64 202 203 204 206 208 ... 86 87 88 89
-    base                      (index) int64 115 114 114 115 ... 114 114 114 114
-    temperature               (index) float64 -0.33 -0.53 -0.23 ... -10.7 -10.76
+    sensor_pack               (index) int64 234 235 236 237 238 ... 74 75 76 77
+    base                      (index) int64 111 111 115 113 ... 115 115 115 115
+    temperature               (index) float64 22.25 22.06 22.23 ... 4.25 4.77
     ...                        ...
     spectrum_length           (index) int64 2028 2028 2028 ... 2028 2028 2028
     frequency_scaling_factor  (index) float64 0.7257 0.7257 ... 0.7257 0.7257
     frequency_min             (index) float64 14.51 14.51 14.51 ... 14.51 14.51
     frequency_max             (index) float64 1.485e+03 1.485e+03 ... 1.485e+03
     frequency_start_index     (index) int64 20 20 20 20 20 20 ... 20 20 20 20 20
-    spectrum                  (index) object [0.036340438496363765, 0.0419017...
-Memory used for dataset: 0.026 MB
+    spectrum                  (index) object [0.022513717649706767, 0.0255432...
+Memory used for dataset: 0.013 MB
 Type used for sensor: <class 'numpy.int64'>
 Type used for datetime: <class 'pandas._libs.tslibs.timestamps.Timestamp'>
-First DateTime in dataset (UTC): 2025-02-12 00:02:15+00:00
-Last DateTime in dataset (UTC):  2025-02-16 23:58:53+00:00
-First DateTime in dataset (Helsinki): 2025-02-12 02:02:15+02:00
-Last DateTime in dataset (Helsinki):  2025-02-17 01:58:53+02:00
+First DateTime in dataset (UTC): 2025-03-06 00:06:30+00:00
+Last DateTime in dataset (UTC):  2025-03-08 09:20:11+00:00
+First DateTime in dataset (Helsinki): 2025-03-06 02:06:30+02:00
+Last DateTime in dataset (Helsinki):  2025-03-08 11:20:11+02:00
+Spectra for sensor 109: (14.51-1485.49 Hz) (2028 bins)
+Spectra for sensor 116: (14.51-1485.49 Hz) (2028 bins)
+
+<xarray.Dataset>
+Dimensions:                   (index: 101)
+Coordinates:
+  * index                     (index) int64 11 12 13 14 15 ... 118 119 120 121
+Data variables: (12/13)
+    datetime                  (index) object 2025-03-06T10:32:22+00:00 ... 20...
+    sensor                    (index) int64 109 109 109 109 ... 116 116 116 116
+    sensor_type               (index) int64 48 48 48 48 48 48 ... 48 48 48 48 48
+    sensor_pack               (index) int64 245 246 247 248 249 ... 74 75 76 77
+    base                      (index) int64 113 115 115 115 ... 115 115 115 115
+    temperature               (index) float64 22.63 22.97 22.58 ... 4.25 4.77
+    ...                        ...
+    spectrum_length           (index) int64 2028 2028 2028 ... 2028 2028 2028
+    frequency_scaling_factor  (index) float64 0.7257 0.7257 ... 0.7257 0.7257
+    frequency_min             (index) float64 14.51 14.51 14.51 ... 14.51 14.51
+    frequency_max             (index) float64 1.485e+03 1.485e+03 ... 1.485e+03
+    frequency_start_index     (index) int64 20 20 20 20 20 20 ... 20 20 20 20 20
+    spectrum                  (index) object [0.03136899518827321, 0.03129738...
+Memory used for dataset: 0.011 MB
+Type used for sensor: <class 'numpy.int64'>
+Type used for datetime: <class 'pandas._libs.tslibs.timestamps.Timestamp'>
+First DateTime in dataset (UTC): 2025-03-06 10:17:21+00:00
+Last DateTime in dataset (UTC):  2025-03-08 09:20:11+00:00
+First DateTime in dataset (Helsinki): 2025-03-06 12:17:21+02:00
+Last DateTime in dataset (Helsinki):  2025-03-08 11:20:11+02:00
+HTML file assets/time_slider_plot.html was created!
+HTML file assets/acoustic_spectra_plot.html was created!
+HTML file assets/parallel_selector_plot.html was created!
+Plotting similarity for requested range
+START:   2025-03-06 11:39:46.508382+02:00
+END:     2025-03-08 11:39:46.508382+02:00
+
+For sensor 109:
+First datapoints: 2025-03-06 12:32:22+02:00
+Last datapoint:   2025-03-08 10:46:09+02:00
+Num of datapoints: 50
+Previous point used as pre-extension.
+End used as post-extension.
+Datetime for pre-extension:   2025-03-06 11:36:21+02:00
+Datetime for post-extension:  2025-03-08 11:39:46.508382+02:00
+Voronoi edges from:  2025-03-06 12:04:21.500000+02:00
+Voronoi edges to:    2025-03-08 11:12:57.754190922+02:00
+PNG file assets/similarity-measures-sensor-109.png was created!
+
+For sensor 116:
+First datapoints: 2025-03-06 12:17:21+02:00
+Last datapoint:   2025-03-08 11:20:11+02:00
+Num of datapoints: 51
+Previous point used as pre-extension.
+End used as post-extension.
+Datetime for pre-extension:   2025-03-06 11:19:22+02:00
+Datetime for post-extension:  2025-03-08 11:39:46.508382+02:00
+Voronoi edges from:  2025-03-06 11:48:21.500000+02:00
+Voronoi edges to:    2025-03-08 11:29:58.754190922+02:00
+PNG file assets/similarity-measures-sensor-116.png was created!
+PNG file assets/gaussians-sensor-109.png was created!
+PNG file assets/gaussians-sensor-116.png was created!
+HTML file created: index.html
