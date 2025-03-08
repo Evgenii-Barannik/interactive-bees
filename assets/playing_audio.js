@@ -93,12 +93,12 @@ function formatDate(date) {
 
 // Play sound created from current acoustic spectrum
 function playSound() {
-    const sensor = document.getElementById('audioSensorSelector').value;
     var start = performance.now();
-    console.log(`Preparing sound for sensor ${sensor}`);
-
+    const sensor = document.getElementById('audioSensorSelector').value;
     const spectraPlot = document.querySelector('#acoustic_spectra_plot .js-plotly-plot');
     const timeSlider = document.querySelector('#time_slider_plot .js-plotly-plot');
+
+    console.log(`Preparing sound for sensor ${sensor}`);
     if (!spectraPlot) {
         console.error("Acoustic spectra plot not found");
         return;
@@ -126,23 +126,6 @@ function playSound() {
         return;
     }
 
-    // Assert that all amplitudes are sane
-    const hasInvalidValues = amplitudes.some(amp => isNaN(amp) || !isFinite(amp));
-    if (hasInvalidValues) {
-        const error = "Error: spectrum contains NaN or Infinity values";
-        console.error(error);
-        return;
-    }
-    const normalizedAmplitudes = amplitudes.map(amp => amp / 100);
-
-    // Assert that values are in [0, 1] range
-    const isInRange = normalizedAmplitudes.every(amp => amp >= 0 && amp <= 1);
-    if (!isInRange) {
-        const error = "Error: normalized amplitudes outside [0, 1] range";
-        console.error(error);
-        return;
-    }
-    
     let timeRange = null;
     let numDatapoints = 0;
     
@@ -161,7 +144,7 @@ function playSound() {
 
     // Stop any currently playing sound and generate new one
     stopLoop();
-    generate_wave(frequencies, normalizedAmplitudes);
+    generate_wave(frequencies, amplitudes);
     
     // Format debug information
     let debugInfo = `Playing sound for sensor ${sensor}`;
@@ -176,7 +159,7 @@ function playSound() {
     document.getElementById('audioDebugInfo').textContent = debugInfo;
     var end = performance.now();
     var duration = end - start;
-    console.log('Sound preparation took', duration, ' ms')
+    console.log('Sound preparation took', duration, 'ms')
 }
 
 document.addEventListener('DOMContentLoaded', function() {
