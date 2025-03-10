@@ -132,6 +132,9 @@ def plot_acoustic_spectra(ds, start, end, return_fig=False):
         freq_factor = filtered_ds['frequency_scaling_factor'].values[0]
         freq_start  = filtered_ds['frequency_start_index'].values[0]
         frequencies = [(bin+freq_start)*freq_factor for bin in range(spectrum_len)]
+        
+        hover_texts = [f'{averaged_spectrum[j]:.3f}%, {freq:.3f} Hz (channel {j})' 
+                      for j, freq in enumerate(frequencies)]
 
         fig.add_trace(go.Scatter(
             x=frequencies,
@@ -140,7 +143,8 @@ def plot_acoustic_spectra(ds, start, end, return_fig=False):
             marker_color=colors[i],
             opacity=0.7,
             line_shape='spline',
-            hovertemplate='(%{y:.3f}%, %{x:.3f} Hz<extra></extra>)',
+            text=hover_texts,
+            hoverinfo='text',
             meta={
                 "raw_spectra": raw_spectra.tolist(),
                 "raw_times": raw_times
