@@ -18,9 +18,9 @@ if __name__ == "__main__":
         ]
     )
 
-    sensors = [109, 116]
-    # start = datetime(2025, 2, 13, 0, tzinfo = HELSINKI_TZ)
-    # end = datetime(2025, 2, 17, 0, 0, tzinfo = HELSINKI_TZ)
+    sensors = [101, 109, 116]
+    # start = datetime(2025, 2, 3, 0, tzinfo = HELSINKI_TZ)
+    # end = datetime(2025, 3, 5, 0, 0, tzinfo = HELSINKI_TZ)
     start = HELSINKI_2DAYS_AGO
     end = HELSINKI_NOW 
 

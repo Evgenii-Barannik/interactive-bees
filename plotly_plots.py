@@ -140,7 +140,7 @@ def plot_acoustic_spectra(ds, start, end, return_fig=False):
             marker_color=colors[i],
             opacity=0.7,
             line_shape='spline',
-            hovertemplate='(%{y:.1f}%, %{x:.1f} Hz<extra></extra>)',
+            hovertemplate='(%{y:.3f}%, %{x:.3f} Hz<extra></extra>)',
             meta={
                 "raw_spectra": raw_spectra.tolist(),
                 "raw_times": raw_times
