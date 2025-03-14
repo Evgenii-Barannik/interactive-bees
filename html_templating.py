@@ -5,7 +5,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
 from constants import *
-from plotly_plots import plot_time_slider, plot_acoustic_spectra, plot_temperature_humidity, plot_parallel_selector
+from plotly_plots import plot_time_slider, plot_acoustic_spectra, plot_parallel_selector
 from mpl_plots import plot_similarity, plot_gaussians
 from preprocessing import download_csv_if_needed, load_dataset
 

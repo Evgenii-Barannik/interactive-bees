@@ -48,6 +48,7 @@ def plot_parallel_selector(ds, return_fig=False):
     unique_sensors = np.unique(sensors)
     sensor_to_index_map = {sensor: i for (i, sensor) in enumerate(unique_sensors)}
     sensor_indices = [sensor_to_index_map[s] for s in sensors] 
+    colors = px.colors.qualitative.T10
 
     measurment_datetimes = [t.astimezone(HELSINKI_TZ) for t in ds.datetime.values]
     tick_datetimes = pd.date_range(
@@ -57,11 +58,13 @@ def plot_parallel_selector(ds, return_fig=False):
         tz=HELSINKI_TZ
     )
 
+    t10_colorscale = [[i/(len(unique_sensors)-1), colors[i % len(colors)]] for i in range(len(unique_sensors))]
+
     fig = go.Figure(data=
         go.Parcoords(
             line=dict(
                 color=sensor_indices,
-                colorscale='Portland',
+                colorscale=t10_colorscale
             ),
             dimensions = list([
                 dict(
@@ -107,7 +110,7 @@ def plot_parallel_selector(ds, return_fig=False):
 def plot_acoustic_spectra(ds, start, end, return_fig=False):
     fig = go.Figure()
     unique_sensors = np.unique(ds["sensor"].values)
-    colors = px.colors.sample_colorscale("Portland", len(unique_sensors))
+    colors = px.colors.qualitative.T10
     
     for i, sensor_id in enumerate(unique_sensors):
         filtered_ds = ds.where(
@@ -192,7 +195,7 @@ def plot_time_slider(ds, return_fig=False):
     )
     
     all_sensors = np.unique(ds["sensor"].values)
-    colors = px.colors.sample_colorscale("Portland", len(all_sensors))
+    colors = px.colors.qualitative.T10
 
     for i, sensor_id in enumerate(all_sensors):
         filtered_ds = ds.where(
@@ -310,80 +313,80 @@ def plot_time_slider(ds, return_fig=False):
         logging.info(f"HTML file {TIME_SLIDER_HTML} was created!")
         return rendered_html
 
-def plot_temperature_humidity(ds, return_fig=False):
-    fig = go.Figure()
-    all_sensors = np.unique(ds["sensor"].values)
-    colors = px.colors.sample_colorscale("Portland", len(all_sensors))
-    last_datetime = max(ds["datetime"].values).astimezone(HELSINKI_TZ)
-    
-    for i, sensor_id in enumerate(all_sensors):
-        filtered_ds = ds.where(
-                (ds.sensor == sensor_id),
-                drop=True,
-                other=0,
-        )
-        if len(filtered_ds['datetime']) == 0:
-            continue
-        temperatures = filtered_ds['temperature'].values
-        humidities = filtered_ds['humidity'].values
-        times = filtered_ds['datetime'].values
-        floating_hours_time_ago = [(last_datetime - t).total_seconds()/3600 for t in times]
-        max_ago = max(floating_hours_time_ago)
-        opacities = [0.2 + 0.8 * (1 - t/max_ago) for t in floating_hours_time_ago]
-        fig.add_trace(
-            go.Scatter(
-                x=temperatures,
-                y=humidities,
-            # mode="lines+markers",
-            mode="markers",
-            marker=dict(
-                symbol="arrow",
-                size=15,
-                angleref="previous",
-                opacity=opacities,
-                color=colors[i],
-            ),
-            name=str(sensor_id),
-                # line=dict(
-                #     shape='spline',
-                #     smoothing=0.7,
-                # ),
-                hovertemplate=(
-                    'Sensor %{fullData.name}<br>'
-                    'Temperature: %{x:.1f}°C<br>'
-                    'Humidity: %{y:.1f}%<br>'
-                    'DateTime: %{customdata[0]|%d %b %H:%M}<br>'
-                    'Ago from most recent: %{customdata[1]:.1f} h<extra></extra>'
-                ),
-                customdata=list(zip(
-                    ['{}'.format(t.astimezone(HELSINKI_TZ)) for t in times],
-                    floating_hours_time_ago,
-                ))
-            )
-        )
-    
-    fig.update_layout(
-        xaxis_title='Temperature, °C',
-        yaxis_title='Humidity, %',
-        xaxis=dict(gridwidth=2),
-        yaxis=dict(gridwidth=2),
-        hovermode='closest',
-        legend=LEGEND_CONFIG,
-        uirevision=True,
-        selectionrevision=True,
-        margin=COMMON_MARGIN
-    )
-    fig.add_annotation(text="Temperature and humidity", **ANNOTATION_DEFAULTS)
-
-    if return_fig:
-        return fig
-    else:
-        rendered_html = fig.to_html(config=CONFIG, include_plotlyjs=True, full_html=False)
-        os.makedirs(OUTPUT_DIR, exist_ok=True)
-        with open(TEMPERATURE_HUMIDIY_HTML, 'w') as file:
-            file.write(rendered_html)
-        logging.info(f"HTML file {TEMPERATURE_HUMIDIY_HTML} was created!")
-        return rendered_html
+# def plot_temperature_humidity(ds, return_fig=False):
+#     fig = go.Figure()
+#     all_sensors = np.unique(ds["sensor"].values)
+#     colors = px.colors.sample_colorscale("Portland", len(all_sensors))
+#     last_datetime = max(ds["datetime"].values).astimezone(HELSINKI_TZ)
+#
+#     for i, sensor_id in enumerate(all_sensors):
+#         filtered_ds = ds.where(
+#                 (ds.sensor == sensor_id),
+#                 drop=True,
+#                 other=0,
+#         )
+#         if len(filtered_ds['datetime']) == 0:
+#             continue
+#         temperatures = filtered_ds['temperature'].values
+#         humidities = filtered_ds['humidity'].values
+#         times = filtered_ds['datetime'].values
+#         floating_hours_time_ago = [(last_datetime - t).total_seconds()/3600 for t in times]
+#         max_ago = max(floating_hours_time_ago)
+#         opacities = [0.2 + 0.8 * (1 - t/max_ago) for t in floating_hours_time_ago]
+#         fig.add_trace(
+#             go.Scatter(
+#                 x=temperatures,
+#                 y=humidities,
+#             # mode="lines+markers",
+#             mode="markers",
+#             marker=dict(
+#                 symbol="arrow",
+#                 size=15,
+#                 angleref="previous",
+#                 opacity=opacities,
+#                 color=colors[i],
+#             ),
+#             name=str(sensor_id),
+#                 # line=dict(
+#                 #     shape='spline',
+#                 #     smoothing=0.7,
+#                 # ),
+#                 hovertemplate=(
+#                     'Sensor %{fullData.name}<br>'
+#                     'Temperature: %{x:.1f}°C<br>'
+#                     'Humidity: %{y:.1f}%<br>'
+#                     'DateTime: %{customdata[0]|%d %b %H:%M}<br>'
+#                     'Ago from most recent: %{customdata[1]:.1f} h<extra></extra>'
+#                 ),
+#                 customdata=list(zip(
+#                     ['{}'.format(t.astimezone(HELSINKI_TZ)) for t in times],
+#                     floating_hours_time_ago,
+#                 ))
+#             )
+#         )
+#
+#     fig.update_layout(
+#         xaxis_title='Temperature, °C',
+#         yaxis_title='Humidity, %',
+#         xaxis=dict(gridwidth=2),
+#         yaxis=dict(gridwidth=2),
+#         hovermode='closest',
+#         legend=LEGEND_CONFIG,
+#         uirevision=True,
+#         selectionrevision=True,
+#         margin=COMMON_MARGIN
+#     )
+#     fig.add_annotation(text="Temperature and humidity", **ANNOTATION_DEFAULTS)
+#
+#     if return_fig:
+#         return fig
+#     else:
+#         rendered_html = fig.to_html(config=CONFIG, include_plotlyjs=True, full_html=False)
+#         os.makedirs(OUTPUT_DIR, exist_ok=True)
+#         with open(TEMPERATURE_HUMIDIY_HTML, 'w') as file:
+#             file.write(rendered_html)
+#         logging.info(f"HTML file {TEMPERATURE_HUMIDIY_HTML} was created!")
+#         return rendered_html
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -409,10 +412,10 @@ if __name__ == "__main__":
     
     time_slider_html = plot_time_slider(filtered_dataset)
     acoustic_spectra_html = plot_acoustic_spectra(filtered_dataset, start, end)
-    temperature_humidity_html = plot_temperature_humidity(filtered_dataset)
+    # temperature_humidity_html = plot_temperature_humidity(filtered_dataset)
     parallel_selector_html = plot_parallel_selector(filtered_dataset)
 
     with open(PLOTLY_COMBINED_HTML, 'w') as file:
-        file.write(time_slider_html + acoustic_spectra_html + temperature_humidity_html + parallel_selector_html)
+        file.write(time_slider_html + acoustic_spectra_html + parallel_selector_html)
         logging.info(f"HTML file {PLOTLY_COMBINED_HTML} created")
     webbrowser.open(Path(PLOTLY_COMBINED_HTML).absolute().as_uri())
