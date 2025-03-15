@@ -5,7 +5,8 @@ import logging
 from constants import *
 from preprocessing import download_csv_if_needed, load_dataset, get_info_for_each_sensor
 from plotly_plots import plot_acoustic_spectra, plot_time_slider, plot_parallel_selector
-from mpl_plots import plot_similarity, plot_gaussians
+from gauss_plot import plot_gaussians
+from similarity_plot import plot_similarity
 from html_templating import create_html
 
 if __name__ == "__main__":
@@ -19,8 +20,6 @@ if __name__ == "__main__":
     )
 
     sensors = [46, 101, 109, 116]
-    # start = datetime(2025, 2, 3, 0, tzinfo = HELSINKI_TZ)
-    # end = datetime(2025, 3, 5, 0, 0, tzinfo = HELSINKI_TZ)
     start = HELSINKI_2DAYS_AGO
     end = HELSINKI_NOW 
 

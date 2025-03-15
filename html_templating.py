@@ -6,7 +6,8 @@ from jinja2 import Environment, FileSystemLoader
 
 from constants import *
 from plotly_plots import plot_time_slider, plot_acoustic_spectra, plot_parallel_selector
-from mpl_plots import plot_similarity, plot_gaussians
+from gauss_plot import plot_gaussians
+from similarity_plot import plot_similarity
 from preprocessing import download_csv_if_needed, load_dataset
 
 def create_html(html_data):
