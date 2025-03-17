@@ -160,6 +160,17 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
         # Legend patching
         p = result.params
         gauss_count = sum(1 for name in components.keys() if name.startswith('g'))
+        
+        # Rectangles
+        for i, cfg in enumerate(FITTING_MODEL):
+            if cfg['type'] == 'peak':
+                color = spectral_colormap(i / gauss_count)
+                ax1.axvspan(cfg['center_range'][0], cfg['center_range'][1], 
+                          alpha=0.2, color=color, label='_nolegend_')
+                ax1.axvline(cfg['center_range'][0], color=color, linestyle='--', alpha=0.5, linewidth=1)
+                ax1.axvline(cfg['center_range'][1], color=color, linestyle='--', alpha=0.5, linewidth=1)
+        
+        # Gaussian curves
         for i, (name, comp) in enumerate(components.items(), 1):
             if name.startswith('g'):
                 j = i - 1
