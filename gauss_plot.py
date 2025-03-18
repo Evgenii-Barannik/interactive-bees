@@ -5,9 +5,13 @@ import matplotlib as mpl
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
+from matplotlib.ticker import FuncFormatter
+import matplotlib.patches as patches
+
 from constants import *
 from plotly_plots import normalize_spectrum
 from preprocessing import get_info_total, load_dataset, show_image, download_csv_if_needed
+from similarity_plot import get_ticks_for_helsinki_tz, format_time_to_helsinki, get_extended_datetimes
 
 FITTING_MODEL = [
         {
@@ -185,6 +189,32 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
                     color=color,
                     label=f"Gauss peak {j}: {center:>6.1f} Hz, {fwhm:>6.1f} Hz, {amplitude:>6.1f}"
                 )
+                
+                # Draw FWHM line segment with arrows pointing outward
+                half_max = amplitude / 2
+                # Left arrow
+                ax1.arrow(
+                    center, half_max,
+                    -fwhm/2, 0,
+                    color=color,
+                    head_width=2,
+                    head_length=6,
+                    length_includes_head=True,
+                    width=0.5,
+                    alpha=0.9
+                )
+                # Right arrow
+                ax1.arrow(
+                    center, half_max,
+                    fwhm/2, 0,
+                    color=color,
+                    head_width=2,
+                    head_length=6,
+                    length_includes_head=True,
+                    width=0.5,
+                    alpha=0.9
+                )
+        
         handles, _ = ax1.get_legend_handles_labels()
         patch0 = mpatches.Patch(color='None', label=f"Gauss peak N: Center, FWHM, Amplitude")
         handles.append(patch0) 
@@ -237,6 +267,180 @@ def plot_gauss_example():
     gauss_plots = plot_gaussians(filtered_ds, start, end, OUTPUT_DIR, "gauss_example.png")
     return gauss_plots
 
+def plot_peak_evolution(ds, start, end, output_path, name_overide=None):
+    logging.info(f"Plotting peak evolution for requested range\nSTART:   {start}\nEND:     {end}")
+    assert start < end
+    images = []
+    all_sensors = np.unique(ds.sensor)
+
+    for sensor_id in all_sensors:
+        filtered_by_timerange = ds.where(
+            (ds.sensor == sensor_id) &
+            (ds['datetime'] > start) & 
+            (ds['datetime'] < end),
+            drop=True,
+            other=0
+        )
+        if len(filtered_by_timerange['datetime'].values) == 0:
+            continue
+
+        measurement_datetimes = np.array([dt.astimezone(HELSINKI_TZ) for dt in filtered_by_timerange['datetime'].values])
+        num_of_datapoints = len(measurement_datetimes)
+        logging.info(f"\nFor sensor {sensor_id}:")
+        logging.info(f"First datapoints: {min(measurement_datetimes)}")
+        logging.info(f"Last datapoint:   {max(measurement_datetimes)}")
+        logging.info(f"Num of datapoints: {num_of_datapoints}")
+        print(measurement_datetimes)
+        
+        extended_datetimes = get_extended_datetimes(ds, sensor_id, start, end)
+        extended_datetimes = np.array([dt.astimezone(HELSINKI_TZ) for dt in extended_datetimes])
+        assert extended_datetimes[0] <= start # pre-extension datetime should be before start or at start
+        assert extended_datetimes[-1] >= end # post-extension datetime should be after end or at end
+        print(extended_datetimes)
+
+        unix_epochs= np.array([t.timestamp() for t in extended_datetimes]) # Unix/Posix epochs (counted from UTC)
+        voronoi_edges = (unix_epochs[:-1] + unix_epochs[1:]) / 2
+        leftmost_edge = pd.to_datetime(voronoi_edges[0], unit='s', utc=True).tz_convert('Europe/Helsinki')
+        rightmost_edge = pd.to_datetime(voronoi_edges[-1], unit='s', utc=True).tz_convert('Europe/Helsinki')
+        logging.info(f"Voronoi edges from:  {leftmost_edge}\nVoronoi edges to:    {rightmost_edge}")
+
+        spectra = np.vstack(filtered_by_timerange['spectrum'].values)
+        freq_factor = filtered_by_timerange['frequency_scaling_factor'].values[0]
+        freq_start = filtered_by_timerange['frequency_start_index'].values[0]
+        spectra_len = spectra.shape[1]
+        frequencies = np.array([(bin+freq_start)*freq_factor for bin in range(spectra_len)])
+
+        fig, ax = plt.subplots(figsize=(15, 10))
+        ax.grid(True, alpha=0.3)
+        spectral_colormap = mpl.colormaps['turbo']
+        gauss_count = sum(1 for cfg in FITTING_MODEL if cfg['type'] == 'peak')
+
+        for j, spectrum in enumerate(spectra):
+            normalized_spectrum = normalize_spectrum(spectrum)
+            window_min = 60
+            window_max = 650
+            mask = (frequencies >= window_min) & (frequencies <= window_max)
+            x_masked = frequencies[mask]
+            y_masked = normalized_spectrum[mask]
+            
+            # Create and fit model
+            model = create_model()
+            params = Parameters()
+            bg = FITTING_MODEL[0]
+            params.add('bg_slope', value=bg['slope_guess'], vary=False)
+            params.add('bg_intercept', value=bg['intercept_guess'], min=0, max=np.min(y_masked))
+            
+            for i, cfg in enumerate(FITTING_MODEL):
+                if cfg['type'] == 'peak':
+                    prefix = f'g{i}_'
+                    params.add(f'{prefix}amplitude', value=cfg['amplitude_guess'], min=0)
+                    params.add(f'{prefix}center', value=np.mean(cfg['center_range']), 
+                             min=cfg['center_range'][0], max=cfg['center_range'][1])
+                    params.add(f'{prefix}fwhm', value=cfg['fwhm_guess'], 
+                             min=cfg.get('fwhm_min', 10), max=cfg.get('fwhm_max', 100))
+            
+            result = model.fit(y_masked, params, x=x_masked)
+            p = result.params
+            
+            # Plot each peak
+            for i, cfg in enumerate(FITTING_MODEL):
+                if cfg['type'] == 'peak':
+                    prefix = f'g{i}_'
+                    color = spectral_colormap(i / gauss_count)
+                    center = p[f'{prefix}center'].value
+                    datetime = measurement_datetimes[j]                    
+                    ax.scatter(center,datetime,color=color)
+
+                    fwhm = p[f'{prefix}fwhm'].value
+                    left_edge = pd.to_datetime(voronoi_edges[j], unit='s', utc=True).tz_convert('Europe/Helsinki')
+                    right_edge = pd.to_datetime(voronoi_edges[j+1], unit='s', utc=True).tz_convert('Europe/Helsinki')
+                    duration = right_edge-left_edge
+
+                    rect = patches.Rectangle((center - fwhm/2, left_edge), fwhm, duration, linewidth=1, edgecolor=color, facecolor=color)
+                    ax.add_patch(rect)                   
+
+            # Add the patch to the Axes
+                    # # Draw FWHM line segment with arrows
+                    # half_max = 0.5  # Since we're showing FWHM, we use 0.5 as the height
+                    
+                    # Left arrow
+                    # ax.arrow(
+                    #     center, time_epochs[idx],
+                    #     -fwhm/2, 0,
+                    #     color=color,
+                    #     head_width=1000,  # Adjust based on your time scale
+                    #     head_length=5,
+                    #     length_includes_head=True,
+                    #     width=100,  # Adjust based on your time scale
+                    #     alpha=0.9
+                    # )
+                    #
+                    # # Right arrow
+                    # ax.arrow(
+                    #     center, time_epochs[idx],
+                    #     fwhm/2, 0,
+                    #     color=color,
+                    #     head_width=1000,
+                    #     head_length=5,
+                    #     length_includes_head=True,
+                    #     width=100,
+                    #     alpha=0.9
+                    # )
+
+        # Set up time axis
+        # datetimes_for_ticks = get_ticks_for_helsinki_tz(start, end, 6)
+        # epochs_for_ticks = [x.timestamp() for x in datetimes_for_ticks]
+        #
+        # ax.set_yticks(epochs_for_ticks, labels=datetimes_for_ticks)
+        # ax.yaxis.set_major_formatter(FuncFormatter(format_time_to_helsinki))
+        #
+        # # Set up frequency axis
+        # ax.set_xlabel('Frequency, Hz', fontsize=14)
+        # ax.set_ylabel('Time', fontsize=14)
+        # ax.set_xlim(0, 700)
+        #
+        # # Add legend
+        # handles = []
+        # for i, cfg in enumerate(FITTING_MODEL):
+        #     if cfg['type'] == 'peak':
+        #         color = spectral_colormap(i / gauss_count)
+        #         handles.append(mpatches.Patch(color=color, label=f'Peak {i}'))
+        #
+        # ax.legend(handles=handles, title='Gaussian Peaks')
+        #
+        # # Add info text
+        # info_text = f"Peak evolution for sensor {sensor_id}\n{get_info_total(filtered_by_timerange)}"
+        # fig.text(0.6, 0.95, info_text, ha='right', fontsize=14)
+        #
+        plt.tight_layout()
+        
+        if name_overide:
+            img_pathname = os.path.join(output_path, name_overide)
+        else:
+            img_pathname = os.path.join(output_path, f"peak-evolution-sensor-{sensor_id}.png")
+        
+        images.append(img_pathname)
+        os.makedirs(output_path, exist_ok=True)
+        plt.savefig(img_pathname, dpi=300, bbox_inches='tight')
+        plt.close()
+        logging.info(f"PNG file {img_pathname} was created!")
+    
+    return images
+
+def plot_peak_evolution_example():
+    sensors = [116]
+    start = datetime(2025, 2, 13, 0, tzinfo=HELSINKI_TZ)
+    end = datetime(2025, 2, 13, 6, 0, tzinfo=HELSINKI_TZ)
+    csv_files = download_csv_if_needed(
+        sensors,
+        start.astimezone(UTC_TZ),
+        end.astimezone(UTC_TZ),
+        DATA_DIR
+    )
+    filtered_ds = load_dataset(csv_files, True, start, end)
+    evolution_plots = plot_peak_evolution(filtered_ds, start, end, OUTPUT_DIR, "peak_evolution_example.png")
+    return evolution_plots
+
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
@@ -246,5 +450,8 @@ if __name__ == "__main__":
         ]
     )
 
-    gauss_example = plot_gauss_example()
-    show_image(gauss_example[0])
+    # gauss_example = plot_gauss_example()
+    # show_image(gauss_example[0])
+    
+    evolution_example = plot_peak_evolution_example()
+    show_image(evolution_example[0])
