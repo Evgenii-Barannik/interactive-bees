@@ -210,7 +210,7 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
         patch_metrics = mpatches.Patch(color='None', label=window_text)
         handles.append(patch_metrics)
 
-        datapoints_info = "\nFit for normalized averaged acoustic spectrum\n{}Sensor: {}\n".format(get_info_total(filtered_ds), sensor_id, window_min, window_max)
+        datapoints_info = "\nFit for normalized averaged acoustic spectrum\n{}Sensor: {}".format(get_info_total(filtered_ds), sensor_id, window_min, window_max)
         patch1 = mpatches.Patch(color='None', label=datapoints_info) 
         handles.append(patch1) 
         fig.legend(bbox_to_anchor=(0.98, 0.98), handles=handles, fontsize=9)
