@@ -14,6 +14,15 @@ from plotly_plots import normalize_spectrum
 from preprocessing import get_info_total, load_dataset, show_image, download_csv_if_needed
 from similarity_plot import get_ticks_for_helsinki_tz, format_time_to_helsinki, get_extended_datetimes
 
+def plot_rectangles(ax, gauss_count, fill):
+    for i, cfg in enumerate(FITTING_MODEL):
+        if cfg['type'] == 'peak':
+            color = COLORMAP(i / gauss_count)
+            ax.axvline(cfg['center_range'][0], color=color, linestyle='--', alpha=0.8, linewidth=1)
+            ax.axvline(cfg['center_range'][1], color=color, linestyle='--', alpha=0.8, linewidth=1)
+            if fill:
+                ax.axvspan(cfg['center_range'][0], cfg['center_range'][1], alpha=0.2, color=color, label='_nolegend_')
+
 FITTING_MODEL = [
         {
             'type': 'background',
@@ -145,6 +154,7 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
         )
         ax1 = axes[0]
         ax2 = axes[1]
+
         ax1.grid(visible=True)
         ax2.grid(visible=True)
         loc = plticker.MultipleLocator(base=100.0) # this locator puts ticks at regular intervals
@@ -166,15 +176,9 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
         p = result.params
         gauss_count = sum(1 for name in components.keys() if name.startswith('g'))
         
-        # Rectangles
-        for i, cfg in enumerate(FITTING_MODEL):
-            if cfg['type'] == 'peak':
-                color = COLORMAP(i / gauss_count)
-                ax1.axvspan(cfg['center_range'][0], cfg['center_range'][1], 
-                          alpha=0.2, color=color, label='_nolegend_')
-                ax1.axvline(cfg['center_range'][0], color=color, linestyle='--', alpha=0.5, linewidth=1)
-                ax1.axvline(cfg['center_range'][1], color=color, linestyle='--', alpha=0.5, linewidth=1)
-        
+        plot_rectangles(ax1, gauss_count, fill=False)
+        # plot_rectangles(ax3, gauss_count, fill=False)
+
         # Gaussian curves
         for i, (name, comp) in enumerate(components.items(), 1):
             if name.startswith('g'):
@@ -190,7 +194,10 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
                     color=color,
                     label=f"Gauss peak {j}: {center:>6.1f} Hz, {fwhm:>6.1f} Hz, {amplitude:>6.1f}"
                 )
-        
+                # Reactangles
+                rect = patches.Rectangle((center - fwhm/2, 0), fwhm, 100, linewidth=1, edgecolor=color, facecolor=color, alpha=0.3)
+                ax1.add_patch(rect)                   
+
         handles, _ = ax1.get_legend_handles_labels()
         patch0 = mpatches.Patch(color='None', label=f"Gauss peak N: Center, FWHM, Amplitude")
         handles.append(patch0) 
@@ -399,8 +406,8 @@ if __name__ == "__main__":
         ]
     )
 
-    # gauss_example = plot_gauss_example()
-    # show_image(gauss_example[0])
+    gauss_example = plot_gauss_example()
+    show_image(gauss_example[0])
     
-    evolution_example = plot_peak_evolution_example()
-    show_image(evolution_example[0])
+    # evolution_example = plot_peak_evolution_example()
+    # show_image(evolution_example[0])
