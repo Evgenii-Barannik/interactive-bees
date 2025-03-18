@@ -190,31 +190,6 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
                     color=color,
                     label=f"Gauss peak {j}: {center:>6.1f} Hz, {fwhm:>6.1f} Hz, {amplitude:>6.1f}"
                 )
-                
-                # Draw FWHM line segment with arrows pointing outward
-                half_max = amplitude / 2
-                # Left arrow
-                ax1.arrow(
-                    center, half_max,
-                    -fwhm/2, 0,
-                    color=color,
-                    head_width=2,
-                    head_length=6,
-                    length_includes_head=True,
-                    width=0.5,
-                    alpha=0.9
-                )
-                # Right arrow
-                ax1.arrow(
-                    center, half_max,
-                    fwhm/2, 0,
-                    color=color,
-                    head_width=2,
-                    head_length=6,
-                    length_includes_head=True,
-                    width=0.5,
-                    alpha=0.9
-                )
         
         handles, _ = ax1.get_legend_handles_labels()
         patch0 = mpatches.Patch(color='None', label=f"Gauss peak N: Center, FWHM, Amplitude")
@@ -349,26 +324,39 @@ def plot_peak_evolution(ds, start, end, output_path, name_overide=None):
                     prefix = f'g{i}_'
                     color = spectral_colormap(i / gauss_count)
                     center = p[f'{prefix}center'].value
-                    datetime = measurement_datetimes[j]                    
-
                     fwhm = p[f'{prefix}fwhm'].value
-                    left_edge = pd.to_datetime(voronoi_edges[j], unit='s', utc=True).tz_convert('Europe/Helsinki')
-                    right_edge = pd.to_datetime(voronoi_edges[j+1], unit='s', utc=True).tz_convert('Europe/Helsinki')
-                    duration = right_edge-left_edge
-
-                    rect = patches.Rectangle((center - fwhm/2, left_edge), fwhm, duration, linewidth=1, edgecolor=color, facecolor=color, alpha=0.4)
+                    
+                    measurement_datetime = measurement_datetimes[j]
+                    left_edge = voronoi_edges[j]
+                    right_edge = voronoi_edges[j+1]
+                    left_edge_datetime = pd.to_datetime(left_edge, unit='s', utc=True).tz_convert('Europe/Helsinki')
+                    right_edge_datetime = pd.to_datetime(right_edge, unit='s', utc=True).tz_convert('Europe/Helsinki')
+                    duration = right_edge - left_edge
+                    print(f"Measurment datetime: {measurement_datetime}, Left edge: {left_edge_datetime}, Right edge: {right_edge_datetime}")
+ 
+                    rect = patches.Rectangle(
+                        (center - fwhm/2, left_edge), 
+                        fwhm, 
+                        duration, 
+                        linewidth=1, 
+                        edgecolor=color, 
+                        facecolor=color, 
+                        alpha=0.4
+                    )
                     ax.add_patch(rect)                   
-                    ax.scatter(center,datetime,color=color, edgecolors='black')
+                    ax.scatter(center, measurement_datetime.timestamp(), color=color, edgecolors='black')
 
         ax.set_xlabel('Frequency, Hz', fontsize=14)
         ax.set_ylabel('Time', fontsize=14)
         ax.set_xlim(0, 700)
-
-        def format_time_to_helsinki_NEW(x, _):
-            dt = pd.to_datetime(x, unit='s', utc=True).tz_convert('Europe/Helsinki')
-            return dt.strftime('%d %H:%M')
-        formatter = FuncFormatter(format_time_to_helsinki_NEW)
-        ax.yaxis.set_major_formatter(formatter)
+        
+        # Add datetime formatting
+        # datetimes_for_ticks = get_ticks_for_helsinki_tz(start, end, 4) 
+        ax.yaxis.set_major_formatter(FuncFormatter(format_time_to_helsinki))
+        # ax.set_yticks([dt.timestamp() for dt in datetimes_for_ticks])
+        
+        # Rotate tick labels for better readability
+        plt.setp(ax.get_yticklabels(), rotation=0)
 
         handles = []
         for i, cfg in enumerate(FITTING_MODEL):
@@ -394,8 +382,8 @@ def plot_peak_evolution(ds, start, end, output_path, name_overide=None):
 
 def plot_peak_evolution_example():
     sensors = [116]
-    start = datetime(2025, 2, 13, 0, tzinfo=HELSINKI_TZ)
-    end = datetime(2025, 2, 13, 6, tzinfo=HELSINKI_TZ)
+    start = datetime(2025, 2, 13, 0, 0, tzinfo=HELSINKI_TZ)
+    end = datetime(2025, 2, 17, 0, 0, tzinfo=HELSINKI_TZ)
     csv_files = download_csv_if_needed(
         sensors,
         start.astimezone(UTC_TZ),
