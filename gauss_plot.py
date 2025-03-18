@@ -72,6 +72,8 @@ FITTING_MODEL = [
         }
     ]
 
+COLORMAP = mpl.colormaps['turbo_r']
+
 def linear_background(x, slope, intercept):
     return slope * x + intercept
 
@@ -88,8 +90,6 @@ def create_model():
 def plot_gaussians(ds, start, end, output_path, name_overide=None):
     images = []
     all_sensors = np.unique(ds.sensor)
-
-    spectral_colormap = mpl.colormaps['turbo']
 
     for sensor_id in all_sensors:
         filtered_ds = ds.where (
@@ -169,7 +169,7 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
         # Rectangles
         for i, cfg in enumerate(FITTING_MODEL):
             if cfg['type'] == 'peak':
-                color = spectral_colormap(i / gauss_count)
+                color = COLORMAP(i / gauss_count)
                 ax1.axvspan(cfg['center_range'][0], cfg['center_range'][1], 
                           alpha=0.2, color=color, label='_nolegend_')
                 ax1.axvline(cfg['center_range'][0], color=color, linestyle='--', alpha=0.5, linewidth=1)
@@ -182,7 +182,7 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
                 amplitude = p[f'g{j}_amplitude'].value
                 center = p[f'g{j}_center'].value
                 fwhm = p[f'g{j}_fwhm'].value
-                color = spectral_colormap(j / gauss_count)
+                color = COLORMAP(j / gauss_count)
                 
                 ax1.plot(
                     x_masked,
@@ -288,7 +288,6 @@ def plot_peak_evolution(ds, start, end, output_path, name_overide=None):
 
         fig, ax = plt.subplots(figsize=(15, 10))
         ax.grid(True, alpha=0.3)
-        spectral_colormap = mpl.colormaps['turbo']
         gauss_count = sum(1 for cfg in FITTING_MODEL if cfg['type'] == 'peak')
 
         for j, spectrum in enumerate(spectra):
@@ -322,7 +321,7 @@ def plot_peak_evolution(ds, start, end, output_path, name_overide=None):
             for i, cfg in enumerate(FITTING_MODEL):
                 if cfg['type'] == 'peak':
                     prefix = f'g{i}_'
-                    color = spectral_colormap(i / gauss_count)
+                    color = COLORMAP(i / gauss_count)
                     center = p[f'{prefix}center'].value
                     fwhm = p[f'{prefix}fwhm'].value
                     
@@ -350,10 +349,7 @@ def plot_peak_evolution(ds, start, end, output_path, name_overide=None):
         ax.set_ylabel('Time', fontsize=14)
         ax.set_xlim(0, 700)
         
-        # Add datetime formatting
-        # datetimes_for_ticks = get_ticks_for_helsinki_tz(start, end, 4) 
         ax.yaxis.set_major_formatter(FuncFormatter(format_time_to_helsinki))
-        # ax.set_yticks([dt.timestamp() for dt in datetimes_for_ticks])
         
         # Rotate tick labels for better readability
         plt.setp(ax.get_yticklabels(), rotation=0)
@@ -361,7 +357,7 @@ def plot_peak_evolution(ds, start, end, output_path, name_overide=None):
         handles = []
         for i, cfg in enumerate(FITTING_MODEL):
             if cfg['type'] == 'peak':
-                color = spectral_colormap(i / gauss_count)
+                color = COLORMAP(i / gauss_count)
                 handles.append(mpatches.Patch(color=color, label=f'Peak {i}'))
         ax.legend(handles=handles, title='Gaussian Peaks')
         
@@ -383,7 +379,7 @@ def plot_peak_evolution(ds, start, end, output_path, name_overide=None):
 def plot_peak_evolution_example():
     sensors = [116]
     start = datetime(2025, 2, 13, 0, 0, tzinfo=HELSINKI_TZ)
-    end = datetime(2025, 2, 17, 0, 0, tzinfo=HELSINKI_TZ)
+    end = datetime(2025, 2, 13, 6, 0, tzinfo=HELSINKI_TZ)
     csv_files = download_csv_if_needed(
         sensors,
         start.astimezone(UTC_TZ),
