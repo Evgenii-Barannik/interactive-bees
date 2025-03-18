@@ -177,7 +177,6 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
         gauss_count = sum(1 for name in components.keys() if name.startswith('g'))
         
         plot_rectangles(ax1, gauss_count, fill=False)
-        # plot_rectangles(ax3, gauss_count, fill=False)
 
         # Gaussian curves
         for i, (name, comp) in enumerate(components.items(), 1):
@@ -351,6 +350,7 @@ def plot_peak_evolution(ds, start, end, output_path, name_overide=None):
                     )
                     ax.add_patch(rect)                   
                     ax.scatter(center, measurement_datetime.timestamp(), color=color, edgecolors='black')
+                    plot_rectangles(ax, gauss_count, fill=False)
 
         ax.set_xlabel('Frequency, Hz', fontsize=14)
         ax.set_ylabel('Time', fontsize=14)
@@ -359,7 +359,7 @@ def plot_peak_evolution(ds, start, end, output_path, name_overide=None):
         ax.yaxis.set_major_formatter(FuncFormatter(format_time_to_helsinki))
         
         # Rotate tick labels for better readability
-        plt.setp(ax.get_yticklabels(), rotation=0)
+        # plt.setp(ax.get_yticklabels(), rotation=0)
 
         handles = []
         for i, cfg in enumerate(FITTING_MODEL):
@@ -409,5 +409,5 @@ if __name__ == "__main__":
     gauss_example = plot_gauss_example()
     show_image(gauss_example[0])
     
-    # evolution_example = plot_peak_evolution_example()
-    # show_image(evolution_example[0])
+    evolution_example = plot_peak_evolution_example()
+    show_image(evolution_example[0])
