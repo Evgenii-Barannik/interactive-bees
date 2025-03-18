@@ -8,6 +8,7 @@ import matplotlib.ticker as plticker
 from matplotlib.ticker import FuncFormatter
 import matplotlib.patches as patches
 
+from datetime import datetime
 from constants import *
 from plotly_plots import normalize_spectrum
 from preprocessing import get_info_total, load_dataset, show_image, download_csv_if_needed
@@ -349,69 +350,33 @@ def plot_peak_evolution(ds, start, end, output_path, name_overide=None):
                     color = spectral_colormap(i / gauss_count)
                     center = p[f'{prefix}center'].value
                     datetime = measurement_datetimes[j]                    
-                    ax.scatter(center,datetime,color=color)
 
                     fwhm = p[f'{prefix}fwhm'].value
                     left_edge = pd.to_datetime(voronoi_edges[j], unit='s', utc=True).tz_convert('Europe/Helsinki')
                     right_edge = pd.to_datetime(voronoi_edges[j+1], unit='s', utc=True).tz_convert('Europe/Helsinki')
                     duration = right_edge-left_edge
 
-                    rect = patches.Rectangle((center - fwhm/2, left_edge), fwhm, duration, linewidth=1, edgecolor=color, facecolor=color)
+                    rect = patches.Rectangle((center - fwhm/2, left_edge), fwhm, duration, linewidth=1, edgecolor=color, facecolor=color, alpha=0.4)
                     ax.add_patch(rect)                   
+                    ax.scatter(center,datetime,color=color, edgecolors='black')
 
-            # Add the patch to the Axes
-                    # # Draw FWHM line segment with arrows
-                    # half_max = 0.5  # Since we're showing FWHM, we use 0.5 as the height
-                    
-                    # Left arrow
-                    # ax.arrow(
-                    #     center, time_epochs[idx],
-                    #     -fwhm/2, 0,
-                    #     color=color,
-                    #     head_width=1000,  # Adjust based on your time scale
-                    #     head_length=5,
-                    #     length_includes_head=True,
-                    #     width=100,  # Adjust based on your time scale
-                    #     alpha=0.9
-                    # )
-                    #
-                    # # Right arrow
-                    # ax.arrow(
-                    #     center, time_epochs[idx],
-                    #     fwhm/2, 0,
-                    #     color=color,
-                    #     head_width=1000,
-                    #     head_length=5,
-                    #     length_includes_head=True,
-                    #     width=100,
-                    #     alpha=0.9
-                    # )
+        ax.set_xlabel('Frequency, Hz', fontsize=14)
+        ax.set_ylabel('Time', fontsize=14)
+        ax.set_xlim(0, 700)
 
-        # Set up time axis
-        # datetimes_for_ticks = get_ticks_for_helsinki_tz(start, end, 6)
-        # epochs_for_ticks = [x.timestamp() for x in datetimes_for_ticks]
-        #
-        # ax.set_yticks(epochs_for_ticks, labels=datetimes_for_ticks)
-        # ax.yaxis.set_major_formatter(FuncFormatter(format_time_to_helsinki))
-        #
-        # # Set up frequency axis
-        # ax.set_xlabel('Frequency, Hz', fontsize=14)
-        # ax.set_ylabel('Time', fontsize=14)
-        # ax.set_xlim(0, 700)
-        #
-        # # Add legend
-        # handles = []
-        # for i, cfg in enumerate(FITTING_MODEL):
-        #     if cfg['type'] == 'peak':
-        #         color = spectral_colormap(i / gauss_count)
-        #         handles.append(mpatches.Patch(color=color, label=f'Peak {i}'))
-        #
-        # ax.legend(handles=handles, title='Gaussian Peaks')
-        #
-        # # Add info text
-        # info_text = f"Peak evolution for sensor {sensor_id}\n{get_info_total(filtered_by_timerange)}"
-        # fig.text(0.6, 0.95, info_text, ha='right', fontsize=14)
-        #
+        def format_time_to_helsinki_NEW(x, _):
+            dt = pd.to_datetime(x, unit='s', utc=True).tz_convert('Europe/Helsinki')
+            return dt.strftime('%d %H:%M')
+        formatter = FuncFormatter(format_time_to_helsinki_NEW)
+        ax.yaxis.set_major_formatter(formatter)
+
+        handles = []
+        for i, cfg in enumerate(FITTING_MODEL):
+            if cfg['type'] == 'peak':
+                color = spectral_colormap(i / gauss_count)
+                handles.append(mpatches.Patch(color=color, label=f'Peak {i}'))
+        ax.legend(handles=handles, title='Gaussian Peaks')
+        
         plt.tight_layout()
         
         if name_overide:
@@ -430,7 +395,7 @@ def plot_peak_evolution(ds, start, end, output_path, name_overide=None):
 def plot_peak_evolution_example():
     sensors = [116]
     start = datetime(2025, 2, 13, 0, tzinfo=HELSINKI_TZ)
-    end = datetime(2025, 2, 13, 6, 0, tzinfo=HELSINKI_TZ)
+    end = datetime(2025, 2, 13, 6, tzinfo=HELSINKI_TZ)
     csv_files = download_csv_if_needed(
         sensors,
         start.astimezone(UTC_TZ),
