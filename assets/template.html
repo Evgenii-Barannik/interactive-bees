@@ -58,23 +58,29 @@
    </div>
 
     <div class="row">
-   <!-- -->
+    <!-- -->
       <div class="column">
 	  <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
-	      <div class="title">Gaussian fit</div>
+	      <div class="title">Gaussian fit for averaged spectrum</div>
 	      <select id="gaussImageSelector" style="width: 100px; margin-right: 20px;">
 		  {% for sensor in sensors %}
 		  <option value="{{OUTPUT_DIR}}/gaussians-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
 		  {% endfor %}
 	      </select>
 	  </div>
-	  <img id="displayedGaussImage" class="image-container" src="{{OUTPUT_DIR}}/gaussians-sensor-{{sensors[0]}}.png" alt="Gaussian decomposition">
+	  <img id="displayedGaussImage" class="image-container" src="{{OUTPUT_DIR}}/gaussians-sensor-{{sensors[0]}}.png" alt="Gaussian fit">
       </div>
 
       <div class="column">
-	    <div id="time_slider_plot", class="plotly-container">
-		{{parallel_selector_plot}}
-	    </div>
+	  <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
+	      <div class="title">Gaussian fit evolution</div>
+	      <select id="evolutionImageSelector" style="width: 100px; margin-right: 20px;">
+		  {% for sensor in sensors %}
+		  <option value="{{OUTPUT_DIR}}/evolution-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
+		  {% endfor %}
+	      </select>
+	  </div>
+	  <img id="displayedEvolutionImage" class="image-container" src="{{OUTPUT_DIR}}/evolution-sensor-{{sensors[0]}}.png" alt="Evolution">
       </div>
    <!-- -->
    </div>

@@ -2,6 +2,7 @@ from zoneinfo import ZoneInfo
 from datetime import datetime
 import pandas as pd
 import os 
+import matplotlib as mpl
 
 OUTPUT_DIR = "assets"
 DATA_DIR = "data"
@@ -22,3 +23,64 @@ HELSINKI_NOW = datetime.now(HELSINKI_TZ)
 HELSINKI_4DAYS_AGO = HELSINKI_NOW - pd.Timedelta(days=4)
 HELSINKI_24HOURS_AGO = HELSINKI_NOW - pd.Timedelta(hours=24)
 HELSINKI_2DAYS_AGO = HELSINKI_NOW - pd.Timedelta(hours=48)
+
+COLORMAP_FOR_GAUSSIANS = mpl.colormaps['turbo_r']
+FITTING_WINDOW_MIN = 60 # Hz    
+FITTING_WINDOW_MAX = 650 # Hz
+FITTING_MODEL = [
+        {
+            'type': 'background',
+            'slope_guess': 0,
+            'intercept_guess': 10,
+        },
+        {
+            'type': 'peak',
+            'center_range': (70, 155),
+            'amplitude_guess': 70,
+            'fwhm_guess': 30,
+        },
+        {  
+            'type': 'peak',
+            'center_range': (175, 225),
+            'amplitude_guess': 40,
+            'fwhm_guess': 60,
+        },
+        {  
+            'type': 'peak',
+            'center_range': (225, 275),
+            'amplitude_guess': 40,
+            'fwhm_guess': 60,
+        },
+        {  
+            'type': 'peak',
+            'center_range': (300, 350),
+            'amplitude_guess': 40,
+            'fwhm_guess': 50,
+            'fwhm_max': 70
+        },
+        {  
+            'type': 'peak',
+            'center_range': (370, 440),
+            'amplitude_guess': 20,
+            'fwhm_guess': 30,
+            'fwhm_max': 70
+        },
+        {  
+            'type': 'peak',
+            'center_range': (450, 500),
+            'amplitude_guess': 10,
+            'fwhm_guess': 30
+        },
+        {  
+            'type': 'peak',
+            'center_range': (500, 520),
+            'amplitude_guess': 10,
+            'fwhm_guess': 30
+        },
+        {  
+            'type': 'peak',
+            'center_range': (550, 650),
+            'amplitude_guess': 10,
+            'fwhm_guess': 30
+        }
+    ]

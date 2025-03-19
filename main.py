@@ -6,6 +6,7 @@ from constants import *
 from preprocessing import download_csv_if_needed, load_dataset, get_info_for_each_sensor
 from plotly_plots import plot_acoustic_spectra, plot_time_slider, plot_parallel_selector
 from gauss_plot import plot_gaussians
+from evolution_plot import plot_evolution
 from similarity_plot import plot_similarity
 from html_templating import create_html
 
@@ -19,7 +20,7 @@ if __name__ == "__main__":
         ]
     )
 
-    sensors = [46, 101, 109, 116]
+    sensors = [46, 101, 116]
     start = HELSINKI_2DAYS_AGO
     end = HELSINKI_NOW 
 
@@ -35,9 +36,9 @@ if __name__ == "__main__":
 
     time_slider_html = plot_time_slider(filtered_dataset)
     acoustic_spectra_html = plot_acoustic_spectra(filtered_dataset, start, end)
-    parallel_selector_html = plot_parallel_selector(filtered_dataset)
     _ = plot_similarity(dataset, start, end, OUTPUT_DIR)
     _ = plot_gaussians(dataset, start, end, OUTPUT_DIR)
+    _ = plot_evolution(dataset, start, end, OUTPUT_DIR)
 
     with open(ACOUSTIC_SPECTRA_INFO, "r") as f:
         acoustic_spectra_info = f.read()
@@ -48,11 +49,10 @@ if __name__ == "__main__":
         "acoustic_spectra_plot" : acoustic_spectra_html,
         "acoustic_spectra_info" : acoustic_spectra_info,
         "time_slider_plot": time_slider_html,
-        "parallel_selector_plot": parallel_selector_html,
         "similarity_info": similarity_info,
         "sensors": sensors,
-        "datapoints_info": get_info_for_each_sensor(filtered_dataset, start, end),
         "OUTPUT_DIR": OUTPUT_DIR,
+        "datapoints_info": get_info_for_each_sensor(filtered_dataset, start, end),
     }
 
     html_path = create_html(html_data)

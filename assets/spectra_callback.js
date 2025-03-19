@@ -145,6 +145,12 @@ function setup_spectra_updates() {
     }
 };
 
+const evolutionImageSelector = document.getElementById('evolutionImageSelector');
+const displayedEvolutionImage = document.getElementById('displayedEvolutionImage');
+evolutionImageSelector.addEventListener('change', function() {
+    displayedEvolutionImage.src = this.value;
+});
+
 const gaussImageSelector = document.getElementById('gaussImageSelector');
 const displayedGaussImage = document.getElementById('displayedGaussImage');
 gaussImageSelector.addEventListener('change', function() {
