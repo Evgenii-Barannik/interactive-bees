@@ -106,8 +106,9 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
                     plot_rectangles(ax0, gauss_count, fill=False)
 
 
-        ax1.scatter(acoustic_power_values, [d.timestamp() for d in measurement_datetimes], color='grey', edgecolors='black')
-        ax1.plot(acoustic_power_values, [d.timestamp() for d in measurement_datetimes], 'k-')
+        if sensor_id >= 100:
+            ax1.scatter(acoustic_power_values, [d.timestamp() for d in measurement_datetimes], color='grey', edgecolors='black')
+            ax1.plot(acoustic_power_values, [d.timestamp() for d in measurement_datetimes], 'k-')
 
         datetimes_for_ticks = get_ticks_for_helsinki_tz(start, end)
         timestamps_for_ticks = [d.timestamp() for d in datetimes_for_ticks]
