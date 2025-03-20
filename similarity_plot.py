@@ -47,17 +47,30 @@ def format_time_to_helsinki(x, _):
     dt = datetime.fromtimestamp(x, tz=HELSINKI_TZ) # Timestamps are converted to Helsinki timezone
     return dt.strftime('%d %H:%M')
 
-def get_ticks_for_helsinki_tz(start, end, step_in_hours):
+def get_ticks_for_helsinki_tz(start, end):
     start = start.astimezone(HELSINKI_TZ)
     end = end.astimezone(HELSINKI_TZ)
     assert start < end
-    midnight_before_start = start.replace(hour=0, minute=0, second=0, microsecond=0) 
-    midnight_after_end = end.replace(hour=0, minute=0, second=0, microsecond=0) + pd.Timedelta(days=1)
-    ticks = [copy.deepcopy(midnight_before_start)]
-    moving = midnight_before_start
-    while (moving < midnight_after_end):
-        moving = moving + pd.Timedelta(hours=step_in_hours)
-        ticks.append(moving)
+
+    if (end - start) < pd.Timedelta(hours = 12):
+        step_in_hours = 1
+        before_start = start.replace(minute=0, second=0, microsecond=0) 
+        after_end    = end.replace(minute=0, second=0, microsecond=0)
+        ticks = [copy.deepcopy(before_start)]
+        moving = before_start
+        while (moving < after_end):
+            moving = moving + pd.Timedelta(hours=step_in_hours)
+            ticks.append(moving)
+    else:
+        step_in_hours = 12
+        midnight_before_start = start.replace(hour=0, minute=0, second=0, microsecond=0) 
+        midnight_after_end    = end.replace(hour=0, minute=0, second=0, microsecond=0) + pd.Timedelta(days=1)
+        ticks = [copy.deepcopy(midnight_before_start)]
+        moving = midnight_before_start
+        while (moving < midnight_after_end):
+            moving = moving + pd.Timedelta(hours=step_in_hours)
+            ticks.append(moving)
+
     return ticks
 
 def get_extended_datetimes(ds, sensor_id, start, end):
@@ -177,7 +190,7 @@ def plot_similarity(ds, start, end, output_path, name_overide=None):
         # Data is ploted using unix epochs
         # Ticks are set using unix epochs
         # Tick labels show datetimes in Helsinki timezone
-        datetimes_for_ticks = get_ticks_for_helsinki_tz(start, end, 12) 
+        datetimes_for_ticks = get_ticks_for_helsinki_tz(start, end) 
         epochs_for_ticks = [x.timestamp() for x in datetimes_for_ticks] # Unix epochs
 
         # Settings for Axes

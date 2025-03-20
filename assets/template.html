@@ -61,7 +61,7 @@
     <!-- -->
       <div class="column">
 	  <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
-	      <div class="title">Gaussian fit for averaged spectrum</div>
+	      <div class="title">Gaussian fit</div>
 	      <select id="gaussImageSelector" style="width: 100px; margin-right: 20px;">
 		  {% for sensor in sensors %}
 		  <option value="{{OUTPUT_DIR}}/gaussians-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
@@ -73,7 +73,7 @@
 
       <div class="column">
 	  <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
-	      <div class="title">Gaussian fit evolution</div>
+	      <div class="title">Gaussian evolution</div>
 	      <select id="evolutionImageSelector" style="width: 100px; margin-right: 20px;">
 		  {% for sensor in sensors %}
 		  <option value="{{OUTPUT_DIR}}/evolution-sensor-{{sensor}}.png">Sensor {{sensor}}</option>

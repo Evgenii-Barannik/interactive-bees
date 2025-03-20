@@ -13,6 +13,7 @@ from preprocessing import get_info_total, load_dataset, show_image, download_csv
 from similarity_plot import get_ticks_for_helsinki_tz, format_time_to_helsinki, get_extended_datetimes
 from gauss_plot import plot_rectangles, fit_model
 
+
 def plot_evolution(ds, start, end, output_path, name_overide=None):
     logging.info(f"Plotting peak evolution for requested range\nSTART:   {start}\nEND:     {end}")
     assert start < end
@@ -20,17 +21,17 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
     all_sensors = np.unique(ds.sensor)
 
     for sensor_id in all_sensors:
-        filtered_by_timerange = ds.where(
+        filtered_ds = ds.where(
             (ds.sensor == sensor_id) &
             (ds['datetime'] > start) & 
             (ds['datetime'] < end),
             drop=True,
             other=0
         )
-        if len(filtered_by_timerange['datetime'].values) == 0:
+        if len(filtered_ds['datetime'].values) == 0:
             continue
 
-        measurement_datetimes = np.array([dt.astimezone(HELSINKI_TZ) for dt in filtered_by_timerange['datetime'].values])
+        measurement_datetimes = np.array([dt.astimezone(HELSINKI_TZ) for dt in filtered_ds['datetime'].values])
         num_of_datapoints = len(measurement_datetimes)
         logging.info(f"\nFor sensor {sensor_id}:")
         logging.info(f"First datapoints: {min(measurement_datetimes)}")
@@ -42,15 +43,15 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
         assert extended_datetimes[0] <= start # pre-extension datetime should be before start or at start
         assert extended_datetimes[-1] >= end # post-extension datetime should be after end or at end
 
-        unix_epochs= np.array([t.timestamp() for t in extended_datetimes]) # Unix/Posix epochs (counted from UTC)
+        unix_epochs = np.array([t.timestamp() for t in extended_datetimes]) # Unix/Posix epochs (counted from UTC)
         voronoi_edges = (unix_epochs[:-1] + unix_epochs[1:]) / 2
         leftmost_edge = pd.to_datetime(voronoi_edges[0], unit='s', utc=True).tz_convert('Europe/Helsinki')
         rightmost_edge = pd.to_datetime(voronoi_edges[-1], unit='s', utc=True).tz_convert('Europe/Helsinki')
         logging.info(f"Voronoi edges from:  {leftmost_edge}\nVoronoi edges to:    {rightmost_edge}")
 
-        spectra = np.vstack(filtered_by_timerange['spectrum'].values)
-        freq_factor = filtered_by_timerange['frequency_scaling_factor'].values[0]
-        freq_start = filtered_by_timerange['frequency_start_index'].values[0]
+        spectra = np.vstack(filtered_ds['spectrum'].values)
+        freq_factor = filtered_ds['frequency_scaling_factor'].values[0]
+        freq_start = filtered_ds['frequency_start_index'].values[0]
         spectra_len = spectra.shape[1]
         frequencies = np.array([(bin+freq_start)*freq_factor for bin in range(spectra_len)])
 
@@ -89,19 +90,35 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
                     ax.scatter(center, measurement_datetime.timestamp(), color=color, edgecolors='black')
                     plot_rectangles(ax, gauss_count, fill=False)
 
+
+        datetimes_for_ticks = get_ticks_for_helsinki_tz(start, end)
+        timestamps_for_ticks = [d.timestamp() for d in datetimes_for_ticks]
+        ax.set_yticks(timestamps_for_ticks, labels=datetimes_for_ticks)
+        ax.yaxis.set_major_formatter(FuncFormatter(format_time_to_helsinki))
+
         ax.set_xlabel('Frequency, Hz', fontsize=14)
         ax.set_ylabel('Time', fontsize=14)
         ax.set_xlim(0, 700)
-        
-        ax.yaxis.set_major_formatter(FuncFormatter(format_time_to_helsinki))
+        ax.set_ylim(start.timestamp(), end.timestamp())
 
         handles = []
         for i, cfg in enumerate(FITTING_MODEL):
             if cfg['type'] == 'peak':
                 color = COLORMAP_FOR_GAUSSIANS(i / gauss_count)
-                handles.append(mpatches.Patch(color=color, label=f'Gauss peak {i}'))
-        # ax.legend(handles=handles, title='Evolution of FWHM for gauss peaks')
-        fig.legend(title='Evolution of FWHM for gauss peaks', bbox_to_anchor=(0.98, 0.98), handles=handles, fontsize=9)
+                center = cfg['center_range']
+                handles.append(mpatches.Patch(color=color, label=f'Gauss peak {i}: {center} Hz'))
+        patch = mpatches.Patch(color='None', label=f"Gauss peak N: range for center position")
+        handles.append(patch) 
+        datapoints_info = "\nEvolution of FWHM (colored areas) and\ncenter positions (dots) of gauss peaks\nfor fitted individual acoustic spectra\n{}Sensor: {}".format(get_info_total(filtered_ds), sensor_id, FITTING_WINDOW_MIN, FITTING_WINDOW_MAX)
+        patch = mpatches.Patch(color='None', label=datapoints_info) 
+        handles.append(patch)
+        window_text = f"\nWindow used for fitting: {FITTING_WINDOW_MIN} to {FITTING_WINDOW_MAX} Hz"
+        patch = mpatches.Patch(color='None', label=window_text)
+        handles.append(patch)
+        fig.legend(bbox_to_anchor=(0.98, 0.98), handles=handles, fontsize=9)
+
+        patch = mpatches.Patch(color='None', label=f"Gauss peak N: Center, FWHM, Amplitude")
+        handles.append(patch) 
         plt.tight_layout()
         
         if name_overide:
@@ -118,9 +135,9 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
     return images
 
 def plot_peak_evolution_example():
-    sensors = [116]
-    start = datetime(2025, 2, 13, 0, 0, tzinfo=HELSINKI_TZ)
-    end = datetime(2025, 2, 13, 6, 0, tzinfo=HELSINKI_TZ)
+    sensors = [21]
+    start = datetime(2024, 8, 11, 0, tzinfo = HELSINKI_TZ)
+    end = datetime(2024, 8, 14, 0, 0, tzinfo = HELSINKI_TZ)
     csv_files = download_csv_if_needed(
         sensors,
         start.astimezone(UTC_TZ),
