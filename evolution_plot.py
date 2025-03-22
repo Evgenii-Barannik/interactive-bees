@@ -13,11 +13,10 @@ from preprocessing import get_info_total, load_dataset, show_image, download_csv
 from similarity_plot import get_ticks_for_helsinki_tz, format_time_to_helsinki, get_extended_datetimes
 from gauss_plot import plot_rectangles, fit_model
 
-def calculate_acoustic_power(spectrum, frequencies):
-    delta_f = np.abs(frequencies[1] - frequencies[0])
-    spectral_power_density = np.abs(spectrum)**2
-    total_power = np.sum(spectral_power_density) * delta_f
-    return total_power
+def calculate_total_intensity(spectrum, frequencies):
+    abs_spectrum = np.abs(spectrum)
+    total_intensity = np.sum(abs_spectrum) 
+    return total_intensity
 
 def plot_evolution(ds, start, end, output_path, name_overide=None):
     logging.info(f"Plotting peak evolution for requested range\nSTART:   {start}\nEND:     {end}")
@@ -71,10 +70,9 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
         ax0.grid(True, alpha=0.3)
         gauss_count = sum(1 for cfg in FITTING_MODEL if cfg['type'] == 'peak')
 
-        acoustic_power_values = []
+        intensity_values = []
         for j, spectrum in enumerate(spectra):
-            acoustic_power = calculate_acoustic_power(spectrum, frequencies)
-            acoustic_power_values.append(acoustic_power)
+            intensity_values.append(calculate_total_intensity(spectrum, frequencies))
             normalized_spectrum = normalize_spectrum(spectrum)
             (_, result, _, _) = fit_model(frequencies, normalized_spectrum)
             p = result.params
@@ -107,8 +105,8 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
 
 
         if sensor_id >= 100:
-            ax1.scatter(acoustic_power_values, [d.timestamp() for d in measurement_datetimes], color='grey', edgecolors='black')
-            ax1.plot(acoustic_power_values, [d.timestamp() for d in measurement_datetimes], 'k-')
+            ax1.scatter(intensity_values, [d.timestamp() for d in measurement_datetimes], color='grey', edgecolors='black')
+            ax1.plot(intensity_values, [d.timestamp() for d in measurement_datetimes], 'k-')
 
         datetimes_for_ticks = get_ticks_for_helsinki_tz(start, end)
         timestamps_for_ticks = [d.timestamp() for d in datetimes_for_ticks]
@@ -116,10 +114,10 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
         ax0.yaxis.set_major_formatter(FuncFormatter(format_time_to_helsinki))
 
         ax0.set_xlabel('Frequency, Hz', fontsize=14)
-        ax0.set_ylabel('Time', fontsize=14)
+        ax0.set_ylabel('DateTime', fontsize=14)
         ax0.set_xlim(0, 700)
         ax0.set_ylim(start.timestamp(), end.timestamp())
-        ax1.set_xlabel('Acoustic power, AU', fontsize=14)
+        ax1.set_xlabel('Intensity, AU', fontsize=14)
 
         handles = []
         for i, cfg in enumerate(FITTING_MODEL):
