@@ -1,145 +1,162 @@
-CSV file already exists: data/sensor_46_from_2025-03-18_to_2025-03-20.csv
-CSV file already exists: data/sensor_101_from_2025-03-18_to_2025-03-20.csv
-CSV file already exists: data/sensor_116_from_2025-03-18_to_2025-03-20.csv
+Using this request:
+http://apiologia.zymologia.fi/export/?sensor=20&date_from=2025-03-23&date_to=2025-03-25
+CSV file downloaded and saved: data/sensor_20_from_2025-03-23_to_2025-03-25.csv
+Using this request:
+http://apiologia.zymologia.fi/export/?sensor=21&date_from=2025-03-23&date_to=2025-03-25
+CSV file downloaded and saved: data/sensor_21_from_2025-03-23_to_2025-03-25.csv
+Using this request:
+http://apiologia.zymologia.fi/export/?sensor=46&date_from=2025-03-23&date_to=2025-03-25
+CSV file downloaded and saved: data/sensor_46_from_2025-03-23_to_2025-03-25.csv
+Using this request:
+http://apiologia.zymologia.fi/export/?sensor=116&date_from=2025-03-23&date_to=2025-03-25
+CSV file downloaded and saved: data/sensor_116_from_2025-03-23_to_2025-03-25.csv
+Spectra for sensor  20: (80.22- 821.05 Hz) (1848 bins)
+Spectra for sensor  21: (80.22- 821.05 Hz) (1848 bins)
 Spectra for sensor  46: (80.22- 821.05 Hz) (1848 bins)
-Spectra for sensor 101: (14.51-1485.49 Hz) (2028 bins)
 Spectra for sensor 116: (14.51-1485.49 Hz) (2028 bins)
 
 <xarray.Dataset>
-Dimensions:                   (index: 148)
+Dimensions:                   (index: 262)
 Coordinates:
-  * index                     (index) int64 0 1 2 3 4 5 ... 143 144 145 146 147
+  * index                     (index) int64 0 1 2 3 4 5 ... 257 258 259 260 261
 Data variables: (12/13)
-    datetime                  (index) object 2025-03-18T00:31:00+00:00 ... 20...
-    sensor                    (index) int64 46 46 46 46 46 ... 116 116 116 116
+    datetime                  (index) object 2025-03-23T00:56:23+00:00 ... 20...
+    sensor                    (index) int64 20 20 20 20 20 ... 116 116 116 116
     sensor_type               (index) int64 0 0 0 0 0 0 0 ... 48 48 48 48 48 48
-    sensor_pack               (index) int64 3617 3618 3619 3620 ... 112 113 114
-    base                      (index) int64 10 10 10 10 10 ... 113 113 113 113
-    temperature               (index) float64 4.95 4.39 4.2 ... 0.86 0.58 0.24
+    sensor_pack               (index) int64 5429 5430 5431 5432 ... 255 0 1 2
+    base                      (index) int64 10 10 10 10 10 ... 115 114 115 115
+    temperature               (index) float64 2.68 3.33 2.75 ... 6.75 6.62 6.47
     ...                        ...
     spectrum_length           (index) int64 1848 1848 1848 ... 2028 2028 2028
     frequency_scaling_factor  (index) float64 0.4011 0.4011 ... 0.7257 0.7257
     frequency_min             (index) float64 80.22 80.22 80.22 ... 14.51 14.51
     frequency_max             (index) float64 821.1 821.1 ... 1.485e+03
     frequency_start_index     (index) int64 200 200 200 200 200 ... 20 20 20 20
-    spectrum                  (index) object [14.23666742961776, 13.252460517...
-Memory used for dataset: 0.016 MB
+    spectrum                  (index) object [5.7587548638132295, 11.17265583...
+Memory used for dataset: 0.028 MB
 Type used for sensor: <class 'numpy.int64'>
 Type used for datetime: <class 'pandas._libs.tslibs.timestamps.Timestamp'>
-First DateTime in dataset (UTC): 2025-03-18 00:01:30+00:00
-Last DateTime in dataset (UTC):  2025-03-19 23:50:15+00:00
-First DateTime in dataset (Helsinki): 2025-03-18 02:01:30+02:00
-Last DateTime in dataset (Helsinki):  2025-03-20 01:50:15+02:00
+First DateTime in dataset (UTC): 2025-03-23 00:16:00+00:00
+Last DateTime in dataset (UTC):  2025-03-25 16:29:07+00:00
+First DateTime in dataset (Helsinki): 2025-03-23 02:16:00+02:00
+Last DateTime in dataset (Helsinki):  2025-03-25 18:29:07+02:00
+Spectra for sensor  20: (80.22- 821.05 Hz) (1848 bins)
+Spectra for sensor  21: (80.22- 821.05 Hz) (1848 bins)
 Spectra for sensor  46: (80.22- 821.05 Hz) (1848 bins)
-Spectra for sensor 101: (14.51-1485.49 Hz) (2028 bins)
 Spectra for sensor 116: (14.51-1485.49 Hz) (2028 bins)
 
 <xarray.Dataset>
-Dimensions:                   (index: 145)
+Dimensions:                   (index: 194)
 Coordinates:
-  * index                     (index) int64 1 2 3 4 5 6 ... 143 144 145 146 147
+  * index                     (index) int64 16 17 18 19 20 ... 258 259 260 261
 Data variables: (12/13)
-    datetime                  (index) object 2025-03-18T01:31:00+00:00 ... 20...
-    sensor                    (index) int64 46 46 46 46 46 ... 116 116 116 116
+    datetime                  (index) object 2025-03-23T16:56:12+00:00 ... 20...
+    sensor                    (index) int64 20 20 20 20 20 ... 116 116 116 116
     sensor_type               (index) int64 0 0 0 0 0 0 0 ... 48 48 48 48 48 48
-    sensor_pack               (index) int64 3618 3619 3620 3621 ... 112 113 114
-    base                      (index) int64 10 10 10 10 10 ... 113 113 113 113
-    temperature               (index) float64 4.39 4.2 3.64 ... 0.86 0.58 0.24
+    sensor_pack               (index) int64 5445 5446 5447 5448 ... 255 0 1 2
+    base                      (index) int64 10 10 10 10 10 ... 115 114 115 115
+    temperature               (index) float64 14.01 12.39 11.06 ... 6.62 6.47
     ...                        ...
     spectrum_length           (index) int64 1848 1848 1848 ... 2028 2028 2028
     frequency_scaling_factor  (index) float64 0.4011 0.4011 ... 0.7257 0.7257
     frequency_min             (index) float64 80.22 80.22 80.22 ... 14.51 14.51
     frequency_max             (index) float64 821.1 821.1 ... 1.485e+03
     frequency_start_index     (index) int64 200 200 200 200 200 ... 20 20 20 20
-    spectrum                  (index) object [17.111467154955367, 9.028763256...
-Memory used for dataset: 0.015 MB
+    spectrum                  (index) object [4.673838406958114, 5.8335240711...
+Memory used for dataset: 0.021 MB
 Type used for sensor: <class 'numpy.int64'>
 Type used for datetime: <class 'pandas._libs.tslibs.timestamps.Timestamp'>
-First DateTime in dataset (UTC): 2025-03-18 01:03:29+00:00
-Last DateTime in dataset (UTC):  2025-03-19 23:50:15+00:00
-First DateTime in dataset (Helsinki): 2025-03-18 03:03:29+02:00
-Last DateTime in dataset (Helsinki):  2025-03-20 01:50:15+02:00
+First DateTime in dataset (UTC): 2025-03-23 16:56:12+00:00
+Last DateTime in dataset (UTC):  2025-03-25 16:29:07+00:00
+First DateTime in dataset (Helsinki): 2025-03-23 18:56:12+02:00
+Last DateTime in dataset (Helsinki):  2025-03-25 18:29:07+02:00
 HTML file assets/time_slider_plot.html was created!
 HTML file assets/acoustic_spectra_plot.html was created!
 Plotting similarity for requested range
-START:   2025-03-18 03:02:32.431200+02:00
-END:     2025-03-20 03:02:32.431200+02:00
+START:   2025-03-23 18:44:01.347779+02:00
+END:     2025-03-25 18:44:01.347779+02:00
 
-For sensor 46:
-First datapoints: 2025-03-18 03:31:00+02:00
-Last datapoint:   2025-03-20 01:30:32+02:00
-Num of datapoints: 47
+For sensor 20:
+First datapoints: 2025-03-23 18:56:12+02:00
+Last datapoint:   2025-03-25 17:55:41+02:00
+Num of datapoints: 48
 Previous point used as pre-extension.
 End used as post-extension.
-Datetime for pre-extension:   2025-03-18 02:31:00+02:00
-Datetime for post-extension:  2025-03-20 03:02:32.431200+02:00
-Voronoi edges from:  2025-03-18 03:01:00+02:00
-Voronoi edges to:    2025-03-20 02:16:32.215600014+02:00
+Datetime for pre-extension:   2025-03-23 17:56:13+02:00
+Datetime for post-extension:  2025-03-25 18:44:01.347779+02:00
+Voronoi edges from:  2025-03-23 18:26:12.500000+02:00
+Voronoi edges to:    2025-03-25 18:19:51.173889637+02:00
+PNG file assets/similarity-measures-sensor-20.png was created!
+
+For sensor 21:
+First datapoints: 2025-03-23 19:16:27+02:00
+Last datapoint:   2025-03-25 18:15:54+02:00
+Num of datapoints: 48
+Previous point used as pre-extension.
+End used as post-extension.
+Datetime for pre-extension:   2025-03-23 18:16:28+02:00
+Datetime for post-extension:  2025-03-25 18:44:01.347779+02:00
+Voronoi edges from:  2025-03-23 18:46:27.500000+02:00
+Voronoi edges to:    2025-03-25 18:29:57.673889637+02:00
+PNG file assets/similarity-measures-sensor-21.png was created!
+
+For sensor 46:
+First datapoints: 2025-03-23 19:29:37+02:00
+Last datapoint:   2025-03-25 18:29:07+02:00
+Num of datapoints: 48
+Previous point used as pre-extension.
+End used as post-extension.
+Datetime for pre-extension:   2025-03-23 18:29:37+02:00
+Datetime for post-extension:  2025-03-25 18:44:01.347779+02:00
+Voronoi edges from:  2025-03-23 18:59:37+02:00
+Voronoi edges to:    2025-03-25 18:36:34.173889637+02:00
 PNG file assets/similarity-measures-sensor-46.png was created!
 
-For sensor 101:
-First datapoints: 2025-03-18 03:03:29+02:00
-Last datapoint:   2025-03-20 01:48:17+02:00
-Num of datapoints: 49
-Previous point used as pre-extension.
-End used as post-extension.
-Datetime for pre-extension:   2025-03-18 02:01:30+02:00
-Datetime for post-extension:  2025-03-20 03:02:32.431200+02:00
-Voronoi edges from:  2025-03-18 02:32:29.500000+02:00
-Voronoi edges to:    2025-03-20 02:25:24.715600014+02:00
-PNG file assets/similarity-measures-sensor-101.png was created!
-
 For sensor 116:
-First datapoints: 2025-03-18 03:39:24+02:00
-Last datapoint:   2025-03-20 01:50:15+02:00
-Num of datapoints: 49
+First datapoints: 2025-03-23 19:29:57+02:00
+Last datapoint:   2025-03-25 17:58:48+02:00
+Num of datapoints: 50
 Previous point used as pre-extension.
 End used as post-extension.
-Datetime for pre-extension:   2025-03-18 02:42:25+02:00
-Datetime for post-extension:  2025-03-20 03:02:32.431200+02:00
-Voronoi edges from:  2025-03-18 03:10:54.500000+02:00
-Voronoi edges to:    2025-03-20 02:26:23.715600014+02:00
+Datetime for pre-extension:   2025-03-23 18:38:57+02:00
+Datetime for post-extension:  2025-03-25 18:44:01.347779+02:00
+Voronoi edges from:  2025-03-23 19:04:27+02:00
+Voronoi edges to:    2025-03-25 18:21:24.673889637+02:00
 PNG file assets/similarity-measures-sensor-116.png was created!
+PNG file assets/gaussians-sensor-20.png was created!
+PNG file assets/gaussians-sensor-21.png was created!
 PNG file assets/gaussians-sensor-46.png was created!
-PNG file assets/gaussians-sensor-101.png was created!
 PNG file assets/gaussians-sensor-116.png was created!
 Plotting peak evolution for requested range
-START:   2025-03-18 03:02:32.431200+02:00
-END:     2025-03-20 03:02:32.431200+02:00
-
-For sensor 46:
-First datapoints: 2025-03-18 03:31:00+02:00
-Last datapoint:   2025-03-20 01:30:32+02:00
-Num of datapoints: 47
+START:   2025-03-23 18:44:01.347779+02:00
+END:     2025-03-25 18:44:01.347779+02:00
 Previous point used as pre-extension.
 End used as post-extension.
-Datetime for pre-extension:   2025-03-18 02:31:00+02:00
-Datetime for post-extension:  2025-03-20 03:02:32.431200+02:00
-Voronoi edges from:  2025-03-18 03:01:00+02:00
-Voronoi edges to:    2025-03-20 02:16:32.215600014+02:00
+Datetime for pre-extension:   2025-03-23 17:56:13+02:00
+Datetime for post-extension:  2025-03-25 18:44:01.347779+02:00
+Voronoi edges from:  2025-03-23 18:26:12.500000+02:00
+Voronoi edges to:    2025-03-25 18:19:51.173889637+02:00
+PNG file assets/evolution-sensor-20.png was created!
+Previous point used as pre-extension.
+End used as post-extension.
+Datetime for pre-extension:   2025-03-23 18:16:28+02:00
+Datetime for post-extension:  2025-03-25 18:44:01.347779+02:00
+Voronoi edges from:  2025-03-23 18:46:27.500000+02:00
+Voronoi edges to:    2025-03-25 18:29:57.673889637+02:00
+PNG file assets/evolution-sensor-21.png was created!
+Previous point used as pre-extension.
+End used as post-extension.
+Datetime for pre-extension:   2025-03-23 18:29:37+02:00
+Datetime for post-extension:  2025-03-25 18:44:01.347779+02:00
+Voronoi edges from:  2025-03-23 18:59:37+02:00
+Voronoi edges to:    2025-03-25 18:36:34.173889637+02:00
 PNG file assets/evolution-sensor-46.png was created!
-
-For sensor 101:
-First datapoints: 2025-03-18 03:03:29+02:00
-Last datapoint:   2025-03-20 01:48:17+02:00
-Num of datapoints: 49
 Previous point used as pre-extension.
 End used as post-extension.
-Datetime for pre-extension:   2025-03-18 02:01:30+02:00
-Datetime for post-extension:  2025-03-20 03:02:32.431200+02:00
-Voronoi edges from:  2025-03-18 02:32:29.500000+02:00
-Voronoi edges to:    2025-03-20 02:25:24.715600014+02:00
-PNG file assets/evolution-sensor-101.png was created!
-
-For sensor 116:
-First datapoints: 2025-03-18 03:39:24+02:00
-Last datapoint:   2025-03-20 01:50:15+02:00
-Num of datapoints: 49
-Previous point used as pre-extension.
-End used as post-extension.
-Datetime for pre-extension:   2025-03-18 02:42:25+02:00
-Datetime for post-extension:  2025-03-20 03:02:32.431200+02:00
-Voronoi edges from:  2025-03-18 03:10:54.500000+02:00
-Voronoi edges to:    2025-03-20 02:26:23.715600014+02:00
+Datetime for pre-extension:   2025-03-23 18:38:57+02:00
+Datetime for post-extension:  2025-03-25 18:44:01.347779+02:00
+Voronoi edges from:  2025-03-23 19:04:27+02:00
+Voronoi edges to:    2025-03-25 18:21:24.673889637+02:00
 PNG file assets/evolution-sensor-116.png was created!
+Total plot creation time: 150.52 seconds
 HTML file created: index.html

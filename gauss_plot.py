@@ -107,7 +107,6 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
 
         # Legend patching
         gauss_count = sum(1 for name in components.keys() if name.startswith('g'))
-        
         plot_rectangles(ax1, gauss_count, fill=False)
 
         # Gaussian curves
@@ -123,11 +122,12 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
                     x_masked,
                     comp,
                     color=color,
+                    linewidth=2.0,
                     label=f"Gauss peak {j}: {center:>6.1f} Hz, {fwhm:>6.1f} Hz, {amplitude:>6.1f}"
                 )
-                # Reactangles
-                rect = patches.Rectangle((center - fwhm/2, 0), fwhm, 100, linewidth=1, edgecolor=color, facecolor=color, alpha=0.3)
-                ax1.add_patch(rect)                   
+                # # Reactangles
+                # rect = patches.Rectangle((center - fwhm/2, 0), fwhm, 100, linewidth=1, edgecolor=color, facecolor=color, alpha=0.3)
+                # ax1.add_patch(rect)                   
 
         handles, _ = ax1.get_legend_handles_labels()
         patch = mpatches.Patch(color='None', label=f"Gauss peak N: Center, FWHM, Amplitude")

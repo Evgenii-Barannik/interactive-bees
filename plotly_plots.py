@@ -9,6 +9,7 @@ import pandas as pd
 from pathlib import Path
 from plotly.subplots import make_subplots
 
+from pathlib import Path
 from constants import *
 from preprocessing import load_dataset, download_csv_if_needed 
 
@@ -43,70 +44,75 @@ def normalize_spectrum(arr):
     assert max_val != 0
     return 100 * arr / max_val
 
-def plot_parallel_selector(ds, return_fig=False):
-    sensors = ds.sensor.values
-    unique_sensors = np.unique(sensors)
-    sensor_to_index_map = {sensor: i for (i, sensor) in enumerate(unique_sensors)}
-    sensor_indices = [sensor_to_index_map[s] for s in sensors] 
-    colors = px.colors.qualitative.T10
+def calculate_total_intensity(spectrum):
+    abs_spectrum = np.abs(spectrum)
+    total_intensity = np.sum(abs_spectrum) 
+    return total_intensity
 
-    measurment_datetimes = [t.astimezone(HELSINKI_TZ) for t in ds.datetime.values]
-    tick_datetimes = pd.date_range(
-        start=min(measurment_datetimes),
-        end=max(measurment_datetimes),
-        periods=10,
-        tz=HELSINKI_TZ
-    )
-
-    t10_colorscale = [[i/(len(unique_sensors)-1), colors[i % len(colors)]] for i in range(len(unique_sensors))]
-
-    fig = go.Figure(data=
-        go.Parcoords(
-            line=dict(
-                color=sensor_indices,
-                colorscale=t10_colorscale
-            ),
-            dimensions = list([
-                dict(
-                    label = 'Sensor',
-                    values = sensor_indices, 
-                    tickvals = list(sensor_to_index_map.values()),
-                    ticktext = list(sensor_to_index_map.keys()),
-                    range = [0, len(unique_sensors)-1]   
-                ),
-                dict(
-                    # Datetimes can not be used for values for this type of plot, so we use timestamps:
-                    # https://github.com/plotly/plotly.py/issues/968
-                    label = 'DateTime',
-                    values = [t.timestamp() for t in ds.datetime.values],
-                    tickvals = [t.timestamp() for t in tick_datetimes],
-                    ticktext = [t.strftime('%d %b %H:%M') for t in tick_datetimes]
-                ),
-                dict(
-                    label = 'Temperature,°C',
-                    values = ds.temperature.values
-                    ),
-                dict(
-                    label = 'Humidity, %',
-                    values = ds.humidity.values
-                    ),
-            ])
-        )
-    )
-    fig.update_layout(
-        margin={**COMMON_MARGIN, "r":50},
-    )
-
-    if return_fig:
-        return fig
-    else:
-        rendered_html = fig.to_html(config=CONFIG, include_plotlyjs=True, full_html=False)
-        os.makedirs(OUTPUT_DIR, exist_ok=True)
-        with open(PARALLEL_SELECTOR_HTML, 'w') as file:
-            file.write(rendered_html)
-        logging.info(f"HTML file {PARALLEL_SELECTOR_HTML} was created!")
-        return rendered_html
-
+# def plot_parallel_selector(ds, return_fig=False):
+#     sensors = ds.sensor.values
+#     unique_sensors = np.unique(sensors)
+#     sensor_to_index_map = {sensor: i for (i, sensor) in enumerate(unique_sensors)}
+#     sensor_indices = [sensor_to_index_map[s] for s in sensors] 
+#     colors = px.colors.qualitative.T10
+#
+#     measurment_datetimes = [t.astimezone(HELSINKI_TZ) for t in ds.datetime.values]
+#     tick_datetimes = pd.date_range(
+#         start=min(measurment_datetimes),
+#         end=max(measurment_datetimes),
+#         periods=10,
+#         tz=HELSINKI_TZ
+#     )
+#
+#     t10_colorscale = [[i/(len(unique_sensors)-1), colors[i % len(colors)]] for i in range(len(unique_sensors))]
+#
+#     fig = go.Figure(data=
+#         go.Parcoords(
+#             line=dict(
+#                 color=sensor_indices,
+#                 colorscale=t10_colorscale
+#             ),
+#             dimensions = list([
+#                 dict(
+#                     label = 'Sensor',
+#                     values = sensor_indices, 
+#                     tickvals = list(sensor_to_index_map.values()),
+#                     ticktext = list(sensor_to_index_map.keys()),
+#                     range = [0, len(unique_sensors)-1]   
+#                 ),
+#                 dict(
+#                     # Datetimes can not be used for values for this type of plot, so we use timestamps:
+#                     # https://github.com/plotly/plotly.py/issues/968
+#                     label = 'DateTime',
+#                     values = [t.timestamp() for t in ds.datetime.values],
+#                     tickvals = [t.timestamp() for t in tick_datetimes],
+#                     ticktext = [t.strftime('%d %b %H:%M') for t in tick_datetimes]
+#                 ),
+#                 dict(
+#                     label = 'Temperature,°C',
+#                     values = ds.temperature.values
+#                     ),
+#                 dict(
+#                     label = 'Humidity, %',
+#                     values = ds.humidity.values
+#                     ),
+#             ])
+#         )
+#     )
+#     fig.update_layout(
+#         margin={**COMMON_MARGIN, "r":50},
+#     )
+#
+#     if return_fig:
+#         return fig
+#     else:
+#         rendered_html = fig.to_html(config=CONFIG, include_plotlyjs=True, full_html=False)
+#         os.makedirs(OUTPUT_DIR, exist_ok=True)
+#         with open(PARALLEL_SELECTOR_HTML, 'w') as file:
+#             file.write(rendered_html)
+#         logging.info(f"HTML file {PARALLEL_SELECTOR_HTML} was created!")
+#         return rendered_html
+#
 def plot_acoustic_spectra(ds, start, end, return_fig=False):
     fig = go.Figure()
     unique_sensors = np.unique(ds["sensor"].values)
@@ -188,7 +194,7 @@ def plot_acoustic_spectra(ds, start, end, return_fig=False):
 
 def plot_time_slider(ds, return_fig=False):
     fig = make_subplots(
-        rows=2, 
+        rows=3, 
         cols=1,
         shared_xaxes=True,
         vertical_spacing=0.05,
@@ -208,6 +214,13 @@ def plot_time_slider(ds, return_fig=False):
 
         times = [t.astimezone(HELSINKI_TZ) for t in filtered_ds['datetime'].values]
         
+        spectra = np.vstack(filtered_ds['spectrum'].values)
+
+        total_intensity_for_spectra = []
+        if sensor_id >=100:
+            for spectrum in spectra:
+                total_intensity_for_spectra.append(calculate_total_intensity(spectrum))
+
         fig.add_trace(
             go.Scatter(
                 x=times,
@@ -270,6 +283,36 @@ def plot_time_slider(ds, return_fig=False):
             row=2, col=1
         )
 
+        fig.add_trace(
+            go.Scatter(
+                x=times,
+                y=total_intensity_for_spectra,
+                mode='lines+markers',
+                marker=dict(
+                    symbol='x',
+                    color=colors[i],
+                    size=6,
+                    opacity=0.5
+                ),
+                line=dict(
+                    shape='spline',
+                    color=colors[i],
+                    width=1,
+                ),
+                name=f'Sensor {sensor_id}',
+                legendgroup=f'sensor_{sensor_id}',
+                showlegend=False,
+                hovertemplate=(
+                    '%{customdata}<br>'
+                    'Intesity: %{y:.1f} au<extra></extra>'
+                ),
+                customdata=[
+                    t.astimezone(HELSINKI_TZ).strftime('%Y-%m-%d %H:%M:%S%z') 
+                    for t in filtered_ds['datetime'].values
+                ]
+            ),
+            row=3, col=1
+        )
     fig.update_layout(
         hovermode='closest',
         dragmode='zoom',
@@ -288,7 +331,13 @@ def plot_time_slider(ds, return_fig=False):
         title_font=dict(size=12),
         row=2, col=1
     )
-    
+
+    fig.update_yaxes(
+        title_text="Total intensity, au",
+        title_font=dict(size=12),
+        row=3, col=1
+    )  
+
     fig.update_xaxes(
         type='date',
         rangeslider=dict(
@@ -297,7 +346,7 @@ def plot_time_slider(ds, return_fig=False):
         ),
         tickfont=dict(size=9),
         tickangle=0,
-        row=2, col=1
+        row=3, col=1
     )
     
     fig.add_annotation(
@@ -413,9 +462,9 @@ if __name__ == "__main__":
     time_slider_html = plot_time_slider(filtered_dataset)
     acoustic_spectra_html = plot_acoustic_spectra(filtered_dataset, start, end)
     # temperature_humidity_html = plot_temperature_humidity(filtered_dataset)
-    parallel_selector_html = plot_parallel_selector(filtered_dataset)
+    # parallel_selector_html = plot_parallel_selector(filtered_dataset)
 
     with open(PLOTLY_COMBINED_HTML, 'w') as file:
-        file.write(time_slider_html + acoustic_spectra_html + parallel_selector_html)
+        file.write(time_slider_html + acoustic_spectra_html)
         logging.info(f"HTML file {PLOTLY_COMBINED_HTML} created")
     webbrowser.open(Path(PLOTLY_COMBINED_HTML).absolute().as_uri())
