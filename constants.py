@@ -34,51 +34,51 @@ FITTING_MODEL = [
             'intercept_guess': 10,
         },
         {
-            'type': 'peak',
+            'type': 'peak', # A
             'center_range': (70, 155),
             'amplitude_guess': 70,
             'fwhm_guess': 30,
         },
         {  
-            'type': 'peak',
-            'center_range': (175, 225),
+            'type': 'peak', # B
+            'center_range': (175, 220),
             'amplitude_guess': 40,
-            'fwhm_guess': 60,
+            'fwhm_guess': 50,
         },
         {  
-            'type': 'peak',
+            'type': 'peak', # C
             'center_range': (225, 275),
             'amplitude_guess': 40,
-            'fwhm_guess': 60,
+            'fwhm_guess': 50,
         },
         {  
-            'type': 'peak',
+            'type': 'peak', # D
             'center_range': (300, 350),
             'amplitude_guess': 40,
             'fwhm_guess': 50,
             'fwhm_max': 70
         },
         {  
-            'type': 'peak',
+            'type': 'peak', # E
             'center_range': (370, 440),
             'amplitude_guess': 20,
             'fwhm_guess': 30,
             'fwhm_max': 70
         },
         {  
-            'type': 'peak',
+            'type': 'peak', # F
             'center_range': (450, 500),
             'amplitude_guess': 10,
             'fwhm_guess': 30
         },
         {  
-            'type': 'peak',
+            'type': 'peak', # G 
             'center_range': (500, 520),
             'amplitude_guess': 10,
             'fwhm_guess': 30
         },
         {  
-            'type': 'peak',
+            'type': 'peak', # H
             'center_range': (550, 650),
             'amplitude_guess': 10,
             'fwhm_guess': 30

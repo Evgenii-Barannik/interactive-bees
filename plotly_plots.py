@@ -333,7 +333,7 @@ def plot_time_slider(ds, return_fig=False):
     )
 
     fig.update_yaxes(
-        title_text="Total intensity, au",
+        title_text="Intensity, au",
         title_font=dict(size=12),
         row=3, col=1
     )  

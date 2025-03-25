@@ -34,7 +34,7 @@ def fit_model(x_full, y_full):
             prefix = f'g{i}_'
             params.add(f'{prefix}amplitude', value=cfg['amplitude_guess'], min=0)
             params.add(f'{prefix}center', value=np.mean(cfg['center_range']), min=cfg['center_range'][0], max=cfg['center_range'][1])
-            params.add(f'{prefix}fwhm', value=cfg['fwhm_guess'], min=cfg.get('fwhm_min', 10), max=cfg.get('fwhm_max', 100))
+            params.add(f'{prefix}fwhm', value=cfg['fwhm_guess'], min=cfg.get('fwhm_min', 10), max=cfg.get('fwhm_max', 70))
     result = model.fit(y_masked, params, x=x_masked)
     residuals = y_masked - result.best_fit
     rmse = np.sqrt(np.mean(residuals**2))
@@ -118,12 +118,13 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
                 fwhm = p[f'g{j}_fwhm'].value
                 color = COLORMAP_FOR_GAUSSIANS(j / gauss_count)
                 
+                letter = chr(64 + j)
                 ax1.plot(
                     x_masked,
                     comp,
                     color=color,
                     linewidth=2.0,
-                    label=f"Gauss peak {j}: {center:>6.1f} Hz, {fwhm:>6.1f} Hz, {amplitude:>6.1f}"
+                    label=f"Gauss peak {letter}: {center:>6.1f} Hz, {fwhm:>6.1f} Hz, {amplitude:>6.1f}"
                 )
                 # # Reactangles
                 # rect = patches.Rectangle((center - fwhm/2, 0), fwhm, 100, linewidth=1, edgecolor=color, facecolor=color, alpha=0.3)
@@ -152,7 +153,7 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
         # plt.subplots_adjust(right=0.75)
 
         if name_overide:
-            img_pathname = os.path.join(output_path, name_overide)
+            img_pathname = os.path.join(output_path, f"{name_overide}-{sensor_id}.png")
         else:
             img_pathname = os.path.join(output_path, f"gaussians-sensor-{sensor_id}.png")
 
@@ -174,7 +175,21 @@ def plot_gauss_example():
             DATA_DIR
             )
     filtered_ds = load_dataset(csv_files, True, start, end)
-    gauss_plots = plot_gaussians(filtered_ds, start, end, OUTPUT_DIR, "gauss_example.png")
+    gauss_plots = plot_gaussians(filtered_ds, start, end, OUTPUT_DIR, "gauss_example")
+    return gauss_plots
+
+def plot_gauss_current():
+    sensors = [20, 21, 46, 116]
+    start = HELSINKI_2DAYS_AGO
+    end = HELSINKI_NOW 
+    csv_files = download_csv_if_needed(
+            sensors,
+            start.astimezone(UTC_TZ),
+            end.astimezone(UTC_TZ),
+            DATA_DIR
+            )
+    filtered_ds = load_dataset(csv_files, True, start, end)
+    gauss_plots = plot_gaussians(filtered_ds, start, end, OUTPUT_DIR, f"gauss_current")
     return gauss_plots
 
 if __name__ == "__main__":
@@ -188,3 +203,6 @@ if __name__ == "__main__":
 
     gauss_example = plot_gauss_example()
     show_image(gauss_example[0])
+
+    gauss_current = plot_gauss_current()
+    show_image(gauss_current[0])
