@@ -96,8 +96,7 @@ function setup_spectra_updates() {
         var endTime = new Date(newRange[1]);
         
         let totalSpectra = 0; 
-        // Define normalization limit (should match Python NORMALIZATION_LIMIT)
-        var NORMALIZATION_LIMIT = 70; // Replace with actual value from constants
+        var NORMALIZATION_LIMIT = 60; // THE SAME VALUE MUST BE USED IN PYTHON CODE 
 
         // Process each sensor trace in the acoustic spectra plot.
         for (var i = 0; i < data.length; i++) {

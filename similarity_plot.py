@@ -141,9 +141,11 @@ def plot_similarity(ds, start, end, output_path, name_overide=None):
             continue
         measurement_datetimes = np.array([dt.astimezone(HELSINKI_TZ) for dt in filtered_by_timerange['datetime'].values])
         num_of_datapoints = len(measurement_datetimes)
+        first_datetime = min(measurement_datetimes) 
+        last_datetime = max(measurement_datetimes)
         logging.info(f"\nFor sensor {sensor_id}:")
-        logging.info(f"First datapoints: {min(measurement_datetimes)}")
-        logging.info(f"Last datapoint:   {max(measurement_datetimes)}")
+        logging.info(f"First datetime: {first_datetime}")
+        logging.info(f"Last datetime:  {last_datetime}")
         logging.info(f"Num of datapoints: {num_of_datapoints}")
 
         # Spectra for extension datapoints do not matter. If there are spectra for those points, those spectra will not influence plot.
@@ -218,8 +220,9 @@ def plot_similarity(ds, start, end, output_path, name_overide=None):
         if name_overide:
             img_pathname = os.path.join(output_path, name_overide)
         else:
-            img_pathname = os.path.join(output_path, f"similarity-measures-sensor-{sensor_id}.png")
-
+            img_pathname = create_artifact_pathname(
+                "similarity", output_path, sensor_id, first_datetime, last_datetime, "png"
+            )
         images.append(img_pathname) 
         os.makedirs(output_path, exist_ok=True)
         plt.savefig(img_pathname, dpi=300)
@@ -243,7 +246,6 @@ def plot_similarity_example():
             start,
             end,
             OUTPUT_DIR,
-            "similarity_example.png"
     )
     return similarity_plots
 

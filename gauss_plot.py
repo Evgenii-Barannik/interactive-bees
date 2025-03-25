@@ -75,6 +75,7 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
         spectrum_len = len(averaged_spectrum)
         frequencies = np.array([(bin+freq_start)*freq_factor for bin in range(spectrum_len)])
         normalized_spectrum = normalize_spectrum(averaged_spectrum, frequencies, NORMALIZATION_LIMIT)
+        measurement_datetimes = np.array([dt.astimezone(HELSINKI_TZ) for dt in filtered_ds['datetime'].values])
 
         (x_masked, result, residuals, rmse) = fit_model(frequencies, normalized_spectrum)
         components = result.eval_components(x=x_masked)
@@ -156,7 +157,11 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
         if name_overide:
             img_pathname = os.path.join(output_path, f"{name_overide}-{sensor_id}.png")
         else:
-            img_pathname = os.path.join(output_path, f"gaussians-sensor-{sensor_id}.png")
+            first_datetime = min(measurement_datetimes) 
+            last_datetime = max(measurement_datetimes)
+            img_pathname = create_artifact_pathname(
+                "gauss", output_path, sensor_id, first_datetime, last_datetime, "png"
+            )
 
         images.append(img_pathname) 
         os.makedirs(output_path, exist_ok=True)
@@ -176,7 +181,12 @@ def plot_gauss_example():
             DATA_DIR
             )
     filtered_ds = load_dataset(csv_files, True, start, end)
-    gauss_plots = plot_gaussians(filtered_ds, start, end, OUTPUT_DIR, "gauss_example")
+    gauss_plots = plot_gaussians(
+            filtered_ds,
+            start,
+            end,
+            OUTPUT_DIR,
+    )
     return gauss_plots
 
 def plot_gauss_current():
@@ -190,7 +200,12 @@ def plot_gauss_current():
             DATA_DIR
             )
     filtered_ds = load_dataset(csv_files, True, start, end)
-    gauss_plots = plot_gaussians(filtered_ds, start, end, OUTPUT_DIR, f"gauss_current")
+    gauss_plots = plot_gaussians(
+            filtered_ds,
+            start,
+            end,
+            OUTPUT_DIR,
+    )
     return gauss_plots
 
 if __name__ == "__main__":
@@ -205,5 +220,5 @@ if __name__ == "__main__":
     gauss_example = plot_gauss_example()
     show_image(gauss_example[0])
 
-    gauss_current = plot_gauss_current()
-    show_image(gauss_current[0])
+    # gauss_current = plot_gauss_current()
+    # show_image(gauss_current[0])

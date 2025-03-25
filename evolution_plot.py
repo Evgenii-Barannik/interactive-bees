@@ -40,9 +40,9 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
 
         unix_timestamps = np.array([t.timestamp() for t in extended_datetimes]) # Unix/Posix epochs (counted from UTC)
         voronoi_edges = (unix_timestamps[:-1] + unix_timestamps[1:]) / 2
-        oldest_edge = pd.to_datetime(voronoi_edges[0], unit='s', utc=True).tz_convert('Europe/Helsinki')
-        latest_edge = pd.to_datetime(voronoi_edges[-1], unit='s', utc=True).tz_convert('Europe/Helsinki')
-        logging.info(f"Voronoi edges from:  {oldest_edge}\nVoronoi edges to:    {latest_edge}")
+        first_edge = pd.to_datetime(voronoi_edges[0], unit='s', utc=True).tz_convert('Europe/Helsinki')
+        last_edge = pd.to_datetime(voronoi_edges[-1], unit='s', utc=True).tz_convert('Europe/Helsinki')
+        logging.info(f"Voronoi edges from:  {first_edge}\nVoronoi edges to:    {last_edge}")
 
         spectra = np.vstack(filtered_ds['spectrum'].values)
         freq_factor = filtered_ds['frequency_scaling_factor'].values[0]
@@ -152,7 +152,11 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
         if name_overide:
             img_pathname = os.path.join(output_path, name_overide)
         else:
-            img_pathname = os.path.join(output_path, f"evolution-sensor-{sensor_id}.png")
+            first_datetime = min(measurement_datetimes) 
+            last_datetime = max(measurement_datetimes)
+            img_pathname = create_artifact_pathname(
+                            "evolution", output_path, sensor_id, first_datetime, last_datetime, "png"
+                    )
         
         images.append(img_pathname)
         os.makedirs(output_path, exist_ok=True)
@@ -175,7 +179,12 @@ def plot_peak_evolution_example():
         DATA_DIR
     )
     filtered_ds = load_dataset(csv_files, True, start, end)
-    evolution_plots = plot_evolution(filtered_ds, start, end, OUTPUT_DIR, "peak_evolution_example.png")
+    evolution_plots = plot_evolution(
+            filtered_ds,
+            start,
+            end,
+            OUTPUT_DIR,
+    )
     return evolution_plots
 
 if __name__ == "__main__":
