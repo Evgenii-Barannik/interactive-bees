@@ -27,6 +27,7 @@ HELSINKI_2DAYS_AGO = HELSINKI_NOW - pd.Timedelta(hours=48)
 COLORMAP_FOR_GAUSSIANS = mpl.colormaps['turbo_r']
 FITTING_WINDOW_MIN = 60 # Hz    
 FITTING_WINDOW_MAX = 650 # Hz
+NORMALIZATION_LIMIT = 70 # Hz
 FITTING_MODEL = [
         {
             'type': 'background',

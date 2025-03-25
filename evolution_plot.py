@@ -63,7 +63,7 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
 
         rmse_values = []
         for j, spectrum in enumerate(spectra):
-            normalized_spectrum = normalize_spectrum(spectrum)
+            normalized_spectrum = normalize_spectrum(spectrum, frequencies, NORMALIZATION_LIMIT)
             (_, result, _, rmse) = fit_model(frequencies, normalized_spectrum)
             rmse_values.append(rmse) 
             measurement_datetime = measurement_datetimes[j]

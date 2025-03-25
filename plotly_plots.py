@@ -38,11 +38,15 @@ LEGEND_CONFIG = dict(
     title_text='Sensor', 
 )
 
-def normalize_spectrum(arr):
-    arr = np.asarray(arr)
-    max_val = np.max(arr)
+def normalize_spectrum(spectrum, frequencies, start_freq=0):
+    spectrum = np.asarray(spectrum)
+    if start_freq > 0:
+        mask = np.array(frequencies) >= start_freq
+        max_val = np.max(spectrum[mask])
+    else:
+        max_val = np.max(spectrum)
     assert max_val != 0
-    return 100 * arr / max_val
+    return 100 * spectrum / max_val
 
 def calculate_total_intensity(spectrum):
     abs_spectrum = np.abs(spectrum)
@@ -135,19 +139,20 @@ def plot_acoustic_spectra(ds, start, end, return_fig=False):
             t.astimezone(HELSINKI_TZ)
             for t in filtered_ds['datetime'].values
         ]
-
-        averaged_spectrum = normalize_spectrum(np.nanmean(raw_spectra, axis=0))
+        
+        averaged_spectrum = np.nanmean(raw_spectra, axis=0)
         spectrum_len = len(averaged_spectrum)
         freq_factor = filtered_ds['frequency_scaling_factor'].values[0]
         freq_start  = filtered_ds['frequency_start_index'].values[0]
         frequencies = [(bin+freq_start)*freq_factor for bin in range(spectrum_len)]
+        normalized_spectrum = normalize_spectrum(averaged_spectrum, frequencies, NORMALIZATION_LIMIT)
         
-        hover_texts = [f'{averaged_spectrum[j]:.3f}%, {freq:.3f} Hz (channel {j})' 
+        hover_texts = [f'{normalized_spectrum[j]:.3f}%, {freq:.3f} Hz (channel {j})' 
                       for j, freq in enumerate(frequencies)]
 
         fig.add_trace(go.Scatter(
             x=frequencies,
-            y=averaged_spectrum,
+            y=normalized_spectrum,
             name=str(sensor_id),
             marker_color=colors[i],
             opacity=0.7,

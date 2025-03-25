@@ -69,13 +69,14 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
             continue
 
         raw_spectra = np.vstack(filtered_ds['spectrum'].values)
-        averaged_spectrum = normalize_spectrum(np.nanmean(raw_spectra, axis=0))
-        spectrum_len = len(averaged_spectrum)
+        averaged_spectrum = np.nanmean(raw_spectra, axis=0)
         freq_factor = filtered_ds['frequency_scaling_factor'].values[0]
         freq_start  = filtered_ds['frequency_start_index'].values[0]
+        spectrum_len = len(averaged_spectrum)
         frequencies = np.array([(bin+freq_start)*freq_factor for bin in range(spectrum_len)])
+        normalized_spectrum = normalize_spectrum(averaged_spectrum, frequencies, NORMALIZATION_LIMIT)
 
-        (x_masked, result, residuals, rmse) = fit_model(frequencies, averaged_spectrum)
+        (x_masked, result, residuals, rmse) = fit_model(frequencies, normalized_spectrum)
         components = result.eval_components(x=x_masked)
         p = result.params
 
@@ -101,7 +102,7 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
         ax2.set_ylabel('Residuals, %', fontsize=14)
         ax2.tick_params(axis='both', labelsize=12, length=6, width=1.5)
         
-        ax1.plot(frequencies, averaged_spectrum, 'b-', label='Acoustic spectrum')
+        ax1.plot(frequencies, normalized_spectrum, 'b-', label='Acoustic spectrum')
         ax1.plot(x_masked, result.best_fit, 'k--', label='Total model')
         ax1.plot(x_masked, components['bg_'], linestyle='dotted', label='Linear background')
 
