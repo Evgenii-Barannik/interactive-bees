@@ -96,6 +96,8 @@ function setup_spectra_updates() {
         var endTime = new Date(newRange[1]);
         
         let totalSpectra = 0; 
+        // Define normalization limit (should match Python NORMALIZATION_LIMIT)
+        var NORMALIZATION_LIMIT = 70; // Replace with actual value from constants
 
         // Process each sensor trace in the acoustic spectra plot.
         for (var i = 0; i < data.length; i++) {
@@ -124,8 +126,23 @@ function setup_spectra_updates() {
                     }
                 }
                 var avg = sum.map(function(val) { return val / selectedSpectra.length; });
-                // Normalize the averaged spectrum to 100 * value / max_value
-                var max_val = Math.max.apply(null, avg);
+                
+                // Normalize the averaged spectrum with frequency filtering
+                var frequencies = data[i].x;
+                var max_val = 0;
+                
+                if (NORMALIZATION_LIMIT > 0) {
+                    // Find max value only for frequencies >= NORMALIZATION_LIMIT
+                    for (var k = 0; k < frequencies.length; k++) {
+                        if (frequencies[k] >= NORMALIZATION_LIMIT && avg[k] > max_val) {
+                            max_val = avg[k];
+                        }
+                    }
+                } else {
+                    // Find max value over all frequencies
+                    max_val = Math.max.apply(null, avg);
+                }
+                
                 if (max_val !== 0) {
                     avg = avg.map(function(val) { return 100 * val / max_val; });
                 }
