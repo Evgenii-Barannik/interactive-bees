@@ -1,6 +1,7 @@
 import time
 import logging
 import webbrowser
+import json
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
@@ -13,12 +14,9 @@ from preprocessing import download_csv_if_needed, load_dataset
 
 def get_sensor_datetimes(dataset, sensor_id):
     filtered_ds = dataset.where(dataset.sensor == sensor_id, drop=True)
-    if len(filtered_ds['datetime'].values) == 0:
-        logging.warning(f"No data found for sensor {sensor_id}")
-        return None, None
+    assert len(filtered_ds['datetime'].values) != 0
     first_dt = min(filtered_ds['datetime'].values).astimezone(HELSINKI_TZ)
     last_dt = max(filtered_ds['datetime'].values).astimezone(HELSINKI_TZ)
-    logging.info(f"Sensor {sensor_id}: first_dt={first_dt}, last_dt={last_dt}")
     return first_dt, last_dt
 
 def create_html(html_data):
@@ -41,7 +39,16 @@ if __name__ == "__main__":
         ]
     )
     
-    sensors = [116, 46, 21, 20]
+    # Load image paths and get sensors from JSON first
+    assert os.path.exists(IMAGE_PATHS_JSON), f"Image paths JSON file not found at {IMAGE_PATHS_JSON}"
+    with open(IMAGE_PATHS_JSON, 'r') as f:
+        image_paths = json.load(f)
+    logging.info(f"Loaded image paths from {IMAGE_PATHS_JSON}")
+
+    # Get sensors from JSON and convert to integers for data processing
+    sensors = sorted([int(sensor) for sensor in image_paths.keys()])
+    logging.info(f"Using sensors from JSON: {sensors}")
+
     start = HELSINKI_4DAYS_AGO
     end = HELSINKI_NOW
   
@@ -52,7 +59,6 @@ if __name__ == "__main__":
             DATA_DIR
     )
     dataset = load_dataset(csv_files)
-    logging.info(f"Loaded dataset with sensors: {np.unique(dataset.sensor)}")
   
     # Code section bellow will check if required HTML pieces very already created.
     # It will skip a lot of time on the seconds run because it does not try to recreate existing HTML pieces.
@@ -76,24 +82,20 @@ if __name__ == "__main__":
     with open(SIMILARITY_INFO, "r") as f:
         similarity_info = f.read()
 
-    # Prepare image paths for each sensor
-    image_paths = {}
-    for sensor in sensors:
-        first_dt, last_dt = get_sensor_datetimes(dataset, sensor)
-        if first_dt is not None and last_dt is not None:
-            image_paths[sensor] = {
-                'gauss': create_artifact_pathname('gauss', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
-                'evolution': create_artifact_pathname('evolution', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
-                'similarity': create_artifact_pathname('similarity', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
-            }
-            logging.info(f"Created paths for sensor {sensor}: {image_paths[sensor]}")
+    # Verify all required images exist
+    for sensor, paths in image_paths.items():
+        for plot_type, path in paths.items():
+            assert os.path.exists(path), f"Required image not found: {path} for sensor {sensor}, plot type {plot_type}"
+
+    # Convert numpy.int64 sensors to strings for template
+    template_sensors = [str(sensor) for sensor in sensors]
 
     html_data = {
         "acoustic_spectra_plot": acoustic_spectra_html,
         "acoustic_spectra_info": acoustic_spectra_info,
         "time_slider_plot": time_slider_html,
         "similarity_info": similarity_info,
-        "sensors": sensors,
+        "sensors": template_sensors,
         "OUTPUT_DIR": OUTPUT_DIR,
         "image_paths": image_paths,
     }

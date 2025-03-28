@@ -33,6 +33,7 @@ PLOTLY_COMBINED_HTML = os.path.join(OUTPUT_DIR, "plots.html")
 TEMPERATURE_HUMIDIY_INFO = os.path.join(OUTPUT_DIR, "temperature_humidity_info.txt")
 SIMILARITY_INFO = os.path.join(OUTPUT_DIR, "similarity_info.txt")
 ACOUSTIC_SPECTRA_INFO = os.path.join(OUTPUT_DIR, "acoustic_spectra_info.txt")
+IMAGE_PATHS_JSON = os.path.join(OUTPUT_DIR, "image_paths.json")
 
 UTC_TZ = ZoneInfo('UTC')
 HELSINKI_TZ = ZoneInfo('Europe/Helsinki')
