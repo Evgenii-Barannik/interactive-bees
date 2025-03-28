@@ -8,7 +8,7 @@ import json
 from constants import *
 from preprocessing import download_csv_if_needed, load_dataset, get_info_for_each_sensor
 from plotly_plots import plot_acoustic_spectra, plot_time_slider
-from gauss_plot import plot_gaussians
+from gauss_plot import plot_averaged_and_individual_spectra
 from evolution_plot import plot_evolution
 from similarity_plot import plot_similarity
 from html_templating import create_html, get_sensor_datetimes
@@ -23,8 +23,9 @@ if __name__ == "__main__":
         ]
     )
 
-    sensors = [116, 46, 21, 20]
-    start = HELSINKI_2DAYS_AGO
+    # sensors = [116, 46, 21, 20]
+    sensors = [116]
+    start = HELSINKI_24HOURS_AGO
     end = HELSINKI_NOW 
 
     csv_files = download_csv_if_needed(
@@ -40,8 +41,8 @@ if __name__ == "__main__":
     time_slider_html = plot_time_slider(filtered_dataset)
     acoustic_spectra_html = plot_acoustic_spectra(filtered_dataset, start, end)
     _ = plot_similarity(dataset, start, end, OUTPUT_DIR)
-    _ = plot_gaussians(dataset, start, end, OUTPUT_DIR)
     _ = plot_evolution(dataset, start, end, OUTPUT_DIR)
+    plot_averaged_and_individual_spectra(sensors, start, end)
 
     with open(ACOUSTIC_SPECTRA_INFO, "r") as f:
         acoustic_spectra_info = f.read()
@@ -52,17 +53,26 @@ if __name__ == "__main__":
     for sensor in sensors:
         first_dt, last_dt = get_sensor_datetimes(filtered_dataset, sensor)
         image_paths[sensor] = {
-            'gauss': create_artifact_pathname('gauss', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
+            'gauss_averaged': create_artifact_pathname('gauss', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
+            'gauss_individual': [create_artifact_pathname('gauss', OUTPUT_DIR, sensor, dt, dt, 'png') 
+                               for dt in filtered_dataset.where(filtered_dataset.sensor == sensor, drop=True)['datetime'].values],
             'evolution': create_artifact_pathname('evolution', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
             'similarity': create_artifact_pathname('similarity', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
         }
         logging.info(f"Created paths for sensor {sensor}: {image_paths[sensor]}")
             
         for plot_type, path in image_paths[sensor].items():
-            if os.path.exists(path):
-                logging.info(f"File exists: {path}")
+            if isinstance(path, list):
+                for p in path:
+                    if os.path.exists(p):
+                        logging.info(f"File exists: {p}")
+                    else:
+                        logging.warning(f"File does not exist: {p}")
             else:
-                logging.warning(f"File does not exist: {path}")
+                if os.path.exists(path):
+                    logging.info(f"File exists: {path}")
+                else:
+                    logging.warning(f"File does not exist: {path}")
 
     with open(IMAGE_PATHS_JSON, 'w') as f:
         json.dump(image_paths, f, indent=2)
