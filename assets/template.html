@@ -67,11 +67,11 @@
 	      <div class="title">Averaged fit</div>
 	      <select id="gaussImageSelector" style="width: 100px; margin-right: 20px;">
 		  {% for sensor in sensors %}
-		  <option value="{{OUTPUT_DIR}}/gaussians-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
+		  <option value="{{image_paths[sensor]['gauss']}}">Sensor {{sensor}}</option>
 		  {% endfor %}
 	      </select>
 	  </div>
-	  <img id="displayedGaussImage" class="image-container" src="{{OUTPUT_DIR}}/gaussians-sensor-{{sensors[0]}}.png" alt="Gaussian fit">
+	  <img id="displayedGaussImage" class="image-container" src="{{image_paths[sensors[0]]['gauss']}}" alt="Gaussian fit">
       </div>
 
       <div class="column">
@@ -79,11 +79,11 @@
 	      <div class="title">Fit evolution</div>
 	      <select id="evolutionImageSelector" style="width: 100px; margin-right: 20px;">
 		  {% for sensor in sensors %}
-		  <option value="{{OUTPUT_DIR}}/evolution-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
+		  <option value="{{image_paths[sensor]['evolution']}}">Sensor {{sensor}}</option>
 		  {% endfor %}
 	      </select>
 	  </div>
-	  <img id="displayedEvolutionImage" class="image-container" src="{{OUTPUT_DIR}}/evolution-sensor-{{sensors[0]}}.png" alt="Evolution">
+	  <img id="displayedEvolutionImage" class="image-container" src="{{image_paths[sensors[0]]['evolution']}}" alt="Evolution">
       </div>
    <!-- -->
    </div>
@@ -93,11 +93,11 @@
             <div class="title">Acoustic similarity</div>
             <select id="imageSelector" style="width: 100px; margin-right: 20px;">
                 {% for sensor in sensors %}
-                <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
+                <option value="{{image_paths[sensor]['similarity']}}">Sensor {{sensor}}</option>
                 {% endfor %}
             </select>
         </div>
-        <img id="displayedImage" class="image-container" src="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensors[0]}}.png" alt="Similarity measures">
+        <img id="displayedImage" class="image-container" src="{{image_paths[sensors[0]]['similarity']}}" alt="Similarity measures">
     </div>
 
     <!--<details>-->

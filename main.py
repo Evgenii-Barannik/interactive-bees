@@ -1,6 +1,8 @@
 from pathlib import Path
 import webbrowser
 import logging
+import numpy as np
+import os
 
 from constants import *
 from preprocessing import download_csv_if_needed, load_dataset, get_info_for_each_sensor
@@ -8,7 +10,7 @@ from plotly_plots import plot_acoustic_spectra, plot_time_slider
 from gauss_plot import plot_gaussians
 from evolution_plot import plot_evolution
 from similarity_plot import plot_similarity
-from html_templating import create_html
+from html_templating import create_html, get_sensor_datetimes
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -45,14 +47,34 @@ if __name__ == "__main__":
     with open(SIMILARITY_INFO, "r") as f:
         similarity_info = f.read()
 
+    # Prepare image paths for each sensor
+    image_paths = {}
+    for sensor in sensors:
+        first_dt, last_dt = get_sensor_datetimes(filtered_dataset, sensor)
+        if first_dt is not None and last_dt is not None:
+            image_paths[sensor] = {
+                'gauss': create_artifact_pathname('gauss', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
+                'evolution': create_artifact_pathname('evolution', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
+                'similarity': create_artifact_pathname('similarity', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
+            }
+            logging.info(f"Created paths for sensor {sensor}: {image_paths[sensor]}")
+            
+            # Check if files exist
+            for plot_type, path in image_paths[sensor].items():
+                if os.path.exists(path):
+                    logging.info(f"File exists: {path}")
+                else:
+                    logging.warning(f"File does not exist: {path}")
+
     html_data = {
-        "acoustic_spectra_plot" : acoustic_spectra_html,
-        "acoustic_spectra_info" : acoustic_spectra_info,
+        "acoustic_spectra_plot": acoustic_spectra_html,
+        "acoustic_spectra_info": acoustic_spectra_info,
         "time_slider_plot": time_slider_html,
         "similarity_info": similarity_info,
         "sensors": sensors,
         "OUTPUT_DIR": OUTPUT_DIR,
         "datapoints_info": get_info_for_each_sensor(filtered_dataset, start, end),
+        "image_paths": image_paths,
     }
 
     html_path = create_html(html_data)

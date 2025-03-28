@@ -11,6 +11,16 @@ from evolution_plot import plot_evolution
 from similarity_plot import plot_similarity
 from preprocessing import download_csv_if_needed, load_dataset
 
+def get_sensor_datetimes(dataset, sensor_id):
+    filtered_ds = dataset.where(dataset.sensor == sensor_id, drop=True)
+    if len(filtered_ds['datetime'].values) == 0:
+        logging.warning(f"No data found for sensor {sensor_id}")
+        return None, None
+    first_dt = min(filtered_ds['datetime'].values).astimezone(HELSINKI_TZ)
+    last_dt = max(filtered_ds['datetime'].values).astimezone(HELSINKI_TZ)
+    logging.info(f"Sensor {sensor_id}: first_dt={first_dt}, last_dt={last_dt}")
+    return first_dt, last_dt
+
 def create_html(html_data):
     html_data["version"] = int(time.time()) 
     env = Environment(loader=FileSystemLoader(OUTPUT_DIR))
@@ -31,9 +41,18 @@ if __name__ == "__main__":
         ]
     )
     
-    sensors = [46, 101, 116]
+    sensors = [116, 46, 21, 20]
     start = HELSINKI_4DAYS_AGO
     end = HELSINKI_NOW
+  
+    csv_files = download_csv_if_needed(
+            sensors,
+            start.astimezone(UTC_TZ),
+            end.astimezone(UTC_TZ),
+            DATA_DIR
+    )
+    dataset = load_dataset(csv_files)
+    logging.info(f"Loaded dataset with sensors: {np.unique(dataset.sensor)}")
   
     # Code section bellow will check if required HTML pieces very already created.
     # It will skip a lot of time on the seconds run because it does not try to recreate existing HTML pieces.
@@ -46,14 +65,6 @@ if __name__ == "__main__":
         with open(TIME_SLIDER_HTML, "r") as f:
             time_slider_html = f.read()
     else:
-        csv_files = download_csv_if_needed(
-                sensors,
-                start.astimezone(UTC_TZ),
-                end.astimezone(UTC_TZ),
-                DATA_DIR
-        )
-        dataset = load_dataset(csv_files)
-
         acoustic_spectra_html = plot_acoustic_spectra(dataset, start, end)
         time_slider_html = plot_time_slider(dataset)
         _ = plot_similarity(dataset, start, end, OUTPUT_DIR)
@@ -65,13 +76,26 @@ if __name__ == "__main__":
     with open(SIMILARITY_INFO, "r") as f:
         similarity_info = f.read()
 
+    # Prepare image paths for each sensor
+    image_paths = {}
+    for sensor in sensors:
+        first_dt, last_dt = get_sensor_datetimes(dataset, sensor)
+        if first_dt is not None and last_dt is not None:
+            image_paths[sensor] = {
+                'gauss': create_artifact_pathname('gauss', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
+                'evolution': create_artifact_pathname('evolution', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
+                'similarity': create_artifact_pathname('similarity', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
+            }
+            logging.info(f"Created paths for sensor {sensor}: {image_paths[sensor]}")
+
     html_data = {
-        "acoustic_spectra_plot" : acoustic_spectra_html,
-        "acoustic_spectra_info" : acoustic_spectra_info,
+        "acoustic_spectra_plot": acoustic_spectra_html,
+        "acoustic_spectra_info": acoustic_spectra_info,
         "time_slider_plot": time_slider_html,
         "similarity_info": similarity_info,
         "sensors": sensors,
         "OUTPUT_DIR": OUTPUT_DIR,
+        "image_paths": image_paths,
     }
 
     html_path = create_html(html_data)
