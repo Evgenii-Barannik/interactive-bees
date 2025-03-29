@@ -23,10 +23,12 @@ if __name__ == "__main__":
         ]
     )
 
-    # sensors = [116, 46, 21, 20]
-    sensors = [116]
-    start = HELSINKI_24HOURS_AGO
+    sensors = [116, 46, 21, 20]
+    start = HELSINKI_2DAYS_AGO
     end = HELSINKI_NOW 
+    # sensors = [116, 20]
+    # start = HELSINKI_NOW - pd.Timedelta(hours=6)
+    # end = HELSINKI_NOW 
 
     csv_files = download_csv_if_needed(
             sensors,

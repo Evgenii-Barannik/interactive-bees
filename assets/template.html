@@ -64,14 +64,20 @@
     <!-- -->
       <div class="column">
 	  <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
-	      <div class="title">Averaged fit</div>
-	      <select id="gaussImageSelector" style="width: 100px; margin-right: 20px;">
-		  {% for sensor in sensors %}
-		  <option value="{{image_paths[sensor]['gauss']}}">Sensor {{sensor}}</option>
-		  {% endfor %}
-	      </select>
+	      <div class="title">Fit</div>
+	      <div style="display: flex; gap: 10px; margin-right: 20px;">
+		  <select id="gaussImageSelector" style="width: 100px;">
+		      {% for sensor in sensors %}
+		      <option value="{{image_paths[sensor]['gauss_averaged']}}">Sensor {{sensor}}</option>
+		      {% endfor %}
+		  </select>
+		  <select id="gaussDatetimeSelector" style="width: 165px;">
+		      <option value="averaged">Averaged</option>
+		      <!-- Individual datetime options will be populated by JavaScript -->
+		  </select>
+	      </div>
 	  </div>
-	  <img id="displayedGaussImage" class="image-container" src="{{image_paths[sensors[0]]['gauss']}}" alt="Gaussian fit">
+	  <img id="displayedGaussImage" class="image-container" src="{{image_paths[sensors[0]]['gauss_averaged']}}" alt="Gaussian fit">
       </div>
 
       <div class="column">
@@ -116,7 +122,19 @@
         <summary>About datapoints used</summary>
         <pre style="white-space: pre-wrap">{{datapoints_info}}</pre>
     </details>
+    <script>
+        // Pass image paths to JavaScript
+        const imagePaths = JSON.parse('{{image_paths|tojson|safe}}');
+    </script>
+    <script src="{{OUTPUT_DIR}}/gauss_selectors.js?v={{version}}"></script>
     <script src="{{OUTPUT_DIR}}/spectra_callback.js?v={{version}}"></script>
     <script src="{{OUTPUT_DIR}}/playing_audio.js?v={{version}}"></script>
+    <script>
+        // Initialize Gaussian image paths after all scripts are loaded
+        if (typeof initGaussImagePaths === 'function') {
+            initGaussImagePaths(imagePaths);
+            window.gaussSelectorsInitialized = true;
+        }
+    </script>
 </body>
 </html>

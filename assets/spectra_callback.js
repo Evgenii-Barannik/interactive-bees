@@ -167,11 +167,21 @@ evolutionImageSelector.addEventListener('change', function() {
     displayedEvolutionImage.src = this.value;
 });
 
+// We'll modify the Gaussian selector logic in a separate file (gauss_selectors.js)
+// This is now only here for backward compatibility
 const gaussImageSelector = document.getElementById('gaussImageSelector');
 const displayedGaussImage = document.getElementById('displayedGaussImage');
-gaussImageSelector.addEventListener('change', function() {
-    displayedGaussImage.src = this.value;
-});
+if (gaussImageSelector && !window.gaussSelectorsInitialized) {
+    gaussImageSelector.addEventListener('change', function() {
+        if (typeof updateDatetimeSelector === 'function') {
+            // If our new handler is available, use it
+            updateDatetimeSelector();
+        } else {
+            // Otherwise fall back to the old behavior
+            displayedGaussImage.src = this.value;
+        }
+    });
+}
 
 const imageSelector = document.getElementById('imageSelector');
 const displayedImage = document.getElementById('displayedImage');
