@@ -11,6 +11,7 @@ from plotly_plots import plot_acoustic_spectra, plot_time_slider
 from gauss_plot import plot_averaged_and_individual_spectra
 from evolution_plot import plot_evolution
 from similarity_plot import plot_similarity
+from peak_relations_plot import plot_peak_relations
 from html_templating import create_html, get_sensor_datetimes
 
 if __name__ == "__main__":
@@ -44,6 +45,7 @@ if __name__ == "__main__":
     acoustic_spectra_html = plot_acoustic_spectra(filtered_dataset, start, end)
     _ = plot_similarity(dataset, start, end, OUTPUT_DIR)
     _ = plot_evolution(dataset, start, end, OUTPUT_DIR)
+    _ = plot_peak_relations(dataset, sensors, start, end, OUTPUT_DIR)
     plot_averaged_and_individual_spectra(sensors, start, end)
 
     with open(ACOUSTIC_SPECTRA_INFO, "r") as f:
@@ -60,6 +62,7 @@ if __name__ == "__main__":
                                for dt in filtered_dataset.where(filtered_dataset.sensor == sensor, drop=True)['datetime'].values],
             'evolution': create_artifact_pathname('evolution', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
             'similarity': create_artifact_pathname('similarity', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
+            'peak_relations': create_artifact_pathname('peak_relations', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
         }
         logging.info(f"Created paths for sensor {sensor}: {image_paths[sensor]}")
             

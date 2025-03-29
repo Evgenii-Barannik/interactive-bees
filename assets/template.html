@@ -94,7 +94,9 @@
    <!-- -->
    </div>
 
-    <div>
+    <div class="row">
+    <!-- -->
+      <div class="column">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
             <div class="title">Acoustic similarity</div>
             <select id="imageSelector" style="width: 100px; margin-right: 20px;">
@@ -104,6 +106,20 @@
             </select>
         </div>
         <img id="displayedImage" class="image-container" src="{{image_paths[sensors[0]]['similarity']}}" alt="Similarity measures">
+      </div>
+
+      <div class="column">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
+            <div class="title">Peak relations</div>
+            <select id="peakRelationsImageSelector" style="width: 100px; margin-right: 20px;">
+                {% for sensor in sensors %}
+                <option value="{{image_paths[sensor]['peak_relations']}}">Sensor {{sensor}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <img id="displayedPeakRelationsImage" class="image-container" src="{{image_paths[sensors[0]]['peak_relations']}}" alt="Peak intensity relations">
+      </div>
+    <!-- -->
     </div>
 
     <!--<details>-->
@@ -129,6 +145,7 @@
     <script src="{{OUTPUT_DIR}}/gauss_selectors.js?v={{version}}"></script>
     <script src="{{OUTPUT_DIR}}/spectra_callback.js?v={{version}}"></script>
     <script src="{{OUTPUT_DIR}}/playing_audio.js?v={{version}}"></script>
+    <script src="{{OUTPUT_DIR}}/peak_relations_selector.js?v={{version}}"></script>
     <script>
         // Initialize Gaussian image paths after all scripts are loaded
         if (typeof initGaussImagePaths === 'function') {
