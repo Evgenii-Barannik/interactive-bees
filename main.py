@@ -54,7 +54,7 @@ if __name__ == "__main__":
         first_dt, last_dt = get_sensor_datetimes(filtered_dataset, sensor)
         image_paths[sensor] = {
             'gauss_averaged': create_artifact_pathname('gauss', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
-            'gauss_individual': [create_artifact_pathname('gauss', OUTPUT_DIR, sensor, dt, dt, 'png') 
+            'gauss_individual': [create_artifact_pathname('gauss', OUTPUT_DIR, sensor, dt.astimezone(HELSINKI_TZ), dt.astimezone(HELSINKI_TZ), 'png') 
                                for dt in filtered_dataset.where(filtered_dataset.sensor == sensor, drop=True)['datetime'].values],
             'evolution': create_artifact_pathname('evolution', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
             'similarity': create_artifact_pathname('similarity', OUTPUT_DIR, sensor, first_dt, last_dt, 'png'),
