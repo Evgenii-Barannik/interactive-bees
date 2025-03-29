@@ -3,6 +3,23 @@ from datetime import datetime
 import pandas as pd
 import os 
 import matplotlib as mpl
+import git
+
+repo = git.Repo(search_parent_directories=True)
+sha = repo.head.object.hexsha
+# GIT_COMMIT_SHA = repo.git.rev_parse(sha, short=7)
+ARTIFACT_NAME_BLUEPRINT = "{plotname}_{sensors}_from_{first_datetime}_to_{last_datetime}.{extension}"
+
+def create_artifact_pathname(plotname, output_path, sensor_id, first_datetime, last_datetime, extension):
+    pathname = os.path.join(output_path, ARTIFACT_NAME_BLUEPRINT.format(
+        plotname = plotname,
+        sensors = sensor_id,
+        first_datetime = first_datetime.strftime("%Y-%m-%d-%H-%M-%S%z"),
+        last_datetime =  last_datetime.strftime("%Y-%m-%d-%H-%M-%S%z"),
+        extension = extension
+    ))
+    return pathname
+    
 
 OUTPUT_DIR = "assets"
 DATA_DIR = "data"
@@ -16,6 +33,7 @@ PLOTLY_COMBINED_HTML = os.path.join(OUTPUT_DIR, "plots.html")
 TEMPERATURE_HUMIDIY_INFO = os.path.join(OUTPUT_DIR, "temperature_humidity_info.txt")
 SIMILARITY_INFO = os.path.join(OUTPUT_DIR, "similarity_info.txt")
 ACOUSTIC_SPECTRA_INFO = os.path.join(OUTPUT_DIR, "acoustic_spectra_info.txt")
+IMAGE_PATHS_JSON = os.path.join(OUTPUT_DIR, "image_paths.json")
 
 UTC_TZ = ZoneInfo('UTC')
 HELSINKI_TZ = ZoneInfo('Europe/Helsinki')
@@ -27,7 +45,7 @@ HELSINKI_2DAYS_AGO = HELSINKI_NOW - pd.Timedelta(hours=48)
 COLORMAP_FOR_GAUSSIANS = mpl.colormaps['turbo_r']
 FITTING_WINDOW_MIN = 60 # Hz    
 FITTING_WINDOW_MAX = 650 # Hz
-NORMALIZATION_LIMIT = 70 # Hz
+NORMALIZATION_LIMIT = 60 # Hz. THE SAME VALUE MUST BE USED IN JS CODE.
 FITTING_MODEL = [
         {
             'type': 'background',

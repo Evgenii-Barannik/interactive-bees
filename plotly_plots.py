@@ -309,7 +309,7 @@ def plot_time_slider(ds, return_fig=False):
                 showlegend=False,
                 hovertemplate=(
                     '%{customdata}<br>'
-                    'Intesity: %{y:.1f} au<extra></extra>'
+                    'Intensity: %{y:.1f} au<extra></extra>'
                 ),
                 customdata=[
                     t.astimezone(HELSINKI_TZ).strftime('%Y-%m-%d %H:%M:%S%z') 

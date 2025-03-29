@@ -64,14 +64,20 @@
     <!-- -->
       <div class="column">
 	  <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
-	      <div class="title">Averaged fit</div>
-	      <select id="gaussImageSelector" style="width: 100px; margin-right: 20px;">
-		  {% for sensor in sensors %}
-		  <option value="{{OUTPUT_DIR}}/gaussians-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
-		  {% endfor %}
-	      </select>
+	      <div class="title">Fit</div>
+	      <div style="display: flex; gap: 10px; margin-right: 20px;">
+		  <select id="gaussImageSelector" style="width: 100px;">
+		      {% for sensor in sensors %}
+		      <option value="{{image_paths[sensor]['gauss_averaged']}}">Sensor {{sensor}}</option>
+		      {% endfor %}
+		  </select>
+		  <select id="gaussDatetimeSelector" style="width: 165px;">
+		      <option value="averaged">Averaged</option>
+		      <!-- Individual datetime options will be populated by JavaScript -->
+		  </select>
+	      </div>
 	  </div>
-	  <img id="displayedGaussImage" class="image-container" src="{{OUTPUT_DIR}}/gaussians-sensor-{{sensors[0]}}.png" alt="Gaussian fit">
+	  <img id="displayedGaussImage" class="image-container" src="{{image_paths[sensors[0]]['gauss_averaged']}}" alt="Gaussian fit">
       </div>
 
       <div class="column">
@@ -79,11 +85,11 @@
 	      <div class="title">Fit evolution</div>
 	      <select id="evolutionImageSelector" style="width: 100px; margin-right: 20px;">
 		  {% for sensor in sensors %}
-		  <option value="{{OUTPUT_DIR}}/evolution-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
+		  <option value="{{image_paths[sensor]['evolution']}}">Sensor {{sensor}}</option>
 		  {% endfor %}
 	      </select>
 	  </div>
-	  <img id="displayedEvolutionImage" class="image-container" src="{{OUTPUT_DIR}}/evolution-sensor-{{sensors[0]}}.png" alt="Evolution">
+	  <img id="displayedEvolutionImage" class="image-container" src="{{image_paths[sensors[0]]['evolution']}}" alt="Evolution">
       </div>
    <!-- -->
    </div>
@@ -93,11 +99,11 @@
             <div class="title">Acoustic similarity</div>
             <select id="imageSelector" style="width: 100px; margin-right: 20px;">
                 {% for sensor in sensors %}
-                <option value="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensor}}.png">Sensor {{sensor}}</option>
+                <option value="{{image_paths[sensor]['similarity']}}">Sensor {{sensor}}</option>
                 {% endfor %}
             </select>
         </div>
-        <img id="displayedImage" class="image-container" src="{{OUTPUT_DIR}}/similarity-measures-sensor-{{sensors[0]}}.png" alt="Similarity measures">
+        <img id="displayedImage" class="image-container" src="{{image_paths[sensors[0]]['similarity']}}" alt="Similarity measures">
     </div>
 
     <!--<details>-->
@@ -116,7 +122,19 @@
         <summary>About datapoints used</summary>
         <pre style="white-space: pre-wrap">{{datapoints_info}}</pre>
     </details>
+    <script>
+        // Pass image paths to JavaScript
+        const imagePaths = JSON.parse('{{image_paths|tojson|safe}}');
+    </script>
+    <script src="{{OUTPUT_DIR}}/gauss_selectors.js?v={{version}}"></script>
     <script src="{{OUTPUT_DIR}}/spectra_callback.js?v={{version}}"></script>
     <script src="{{OUTPUT_DIR}}/playing_audio.js?v={{version}}"></script>
+    <script>
+        // Initialize Gaussian image paths after all scripts are loaded
+        if (typeof initGaussImagePaths === 'function') {
+            initGaussImagePaths(imagePaths);
+            window.gaussSelectorsInitialized = true;
+        }
+    </script>
 </body>
 </html>

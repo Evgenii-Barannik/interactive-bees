@@ -54,14 +54,14 @@ def create_model():
         model += Model(gaussian, prefix=f'g{i}_')
     return model
 
-def plot_gaussians(ds, start, end, output_path, name_overide=None):
+def plot_gaussians(ds, sensors_to_draw, start, end, output_path):
     images = []
-    all_sensors = np.unique(ds.sensor)
-    for sensor_id in all_sensors:
+    # all_sensors = np.unique(ds.sensor)
+    for sensor_id in sensors_to_draw:
         filtered_ds = ds.where (
             (ds.sensor == sensor_id) &
-            (ds['datetime'] > start) & 
-            (ds['datetime'] < end),
+            (ds['datetime'] >= start) & 
+            (ds['datetime'] <= end),
             drop = True,
             other = 0
         )
@@ -75,6 +75,7 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
         spectrum_len = len(averaged_spectrum)
         frequencies = np.array([(bin+freq_start)*freq_factor for bin in range(spectrum_len)])
         normalized_spectrum = normalize_spectrum(averaged_spectrum, frequencies, NORMALIZATION_LIMIT)
+        measurement_datetimes = np.array([dt.astimezone(HELSINKI_TZ) for dt in filtered_ds['datetime'].values])
 
         (x_masked, result, residuals, rmse) = fit_model(frequencies, normalized_spectrum)
         components = result.eval_components(x=x_masked)
@@ -134,7 +135,7 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
         handles, _ = ax1.get_legend_handles_labels()
         patch = mpatches.Patch(color='None', label=f"Gauss peak N: Center, FWHM, Amplitude")
         handles.append(patch) 
-        datapoints_info = "\nFit for normalized averaged acoustic spectrum\n{}Sensor: {}".format(get_info_total(filtered_ds), sensor_id, FITTING_WINDOW_MIN, FITTING_WINDOW_MAX)
+        datapoints_info = "\nFit for normalized acoustic spectrum\n{}Sensor: {}".format(get_info_total(filtered_ds), sensor_id, FITTING_WINDOW_MIN, FITTING_WINDOW_MAX)
         patch = mpatches.Patch(color='None', label=datapoints_info) 
         handles.append(patch) 
         window_text = f"\nWindow used for fitting: {FITTING_WINDOW_MIN} to {FITTING_WINDOW_MAX} Hz"
@@ -153,10 +154,11 @@ def plot_gaussians(ds, start, end, output_path, name_overide=None):
         plt.tight_layout()
         # plt.subplots_adjust(right=0.75)
 
-        if name_overide:
-            img_pathname = os.path.join(output_path, f"{name_overide}-{sensor_id}.png")
-        else:
-            img_pathname = os.path.join(output_path, f"gaussians-sensor-{sensor_id}.png")
+        first_datetime = min(measurement_datetimes) 
+        last_datetime = max(measurement_datetimes)
+        img_pathname = create_artifact_pathname(
+            "gauss", output_path, sensor_id, first_datetime, last_datetime, "png"
+        )
 
         images.append(img_pathname) 
         os.makedirs(output_path, exist_ok=True)
@@ -176,7 +178,13 @@ def plot_gauss_example():
             DATA_DIR
             )
     filtered_ds = load_dataset(csv_files, True, start, end)
-    gauss_plots = plot_gaussians(filtered_ds, start, end, OUTPUT_DIR, "gauss_example")
+    gauss_plots = plot_gaussians(
+            filtered_ds,
+            sensors,
+            start,
+            end,
+            OUTPUT_DIR,
+    )
     return gauss_plots
 
 def plot_gauss_current():
@@ -190,8 +198,40 @@ def plot_gauss_current():
             DATA_DIR
             )
     filtered_ds = load_dataset(csv_files, True, start, end)
-    gauss_plots = plot_gaussians(filtered_ds, start, end, OUTPUT_DIR, f"gauss_current")
+    gauss_plots = plot_gaussians(
+            filtered_ds,
+            sensors,
+            start,
+            end,
+            OUTPUT_DIR,
+    )
     return gauss_plots
+
+def plot_averaged_and_individual_spectra(sensors, start, end):
+    csv_files = download_csv_if_needed(
+            sensors,
+            start.astimezone(UTC_TZ),
+            end.astimezone(UTC_TZ),
+            DATA_DIR
+            )
+    filtered_ds = load_dataset(csv_files, True, start, end)
+    measurement_datetimes = np.array([dt.astimezone(HELSINKI_TZ) for dt in filtered_ds['datetime'].values])
+    _ = plot_gaussians(
+        filtered_ds,
+        sensors,
+        start,
+        end,
+        OUTPUT_DIR,
+    )
+
+    for datetime in measurement_datetimes:   
+        _ = plot_gaussians(
+            filtered_ds,
+            sensors,
+            datetime,
+            datetime,
+            OUTPUT_DIR,
+        )
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -204,6 +244,10 @@ if __name__ == "__main__":
 
     gauss_example = plot_gauss_example()
     show_image(gauss_example[0])
+    
+    # start = HELSINKI_2DAYS_AGO
+    # end = HELSINKI_NOW 
+    # plot_averaged_and_individual_spectra([116], start, end)
 
-    gauss_current = plot_gauss_current()
-    show_image(gauss_current[0])
+    # gauss_current = plot_gauss_current()
+    # show_image(gauss_current[0])
