@@ -187,12 +187,6 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
             continue
 
         measurement_datetimes = np.array([dt.astimezone(HELSINKI_TZ) for dt in filtered_ds['datetime'].values])
-        num_of_datapoints = len(measurement_datetimes)
-        logging.info(f"\nFor sensor {sensor_id}:")
-        logging.info(f"First datapoints: {min(measurement_datetimes)}")
-        logging.info(f"Last datapoint:   {max(measurement_datetimes)}")
-        logging.info(f"Num of datapoints: {num_of_datapoints}")
-        
         extended_datetimes = get_extended_datetimes(ds, sensor_id, start, end)
         extended_datetimes = np.array([dt.astimezone(HELSINKI_TZ) for dt in extended_datetimes])
         assert extended_datetimes[0] <= start # pre-extension datetime should be before start or at start
@@ -222,41 +216,46 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
         gauss_count = sum(1 for cfg in FITTING_MODEL if cfg['type'] == 'peak')
 
         rmse_values = []
+        
         for j, spectrum in enumerate(spectra):
             normalized_spectrum = normalize_spectrum(spectrum, frequencies, NORMALIZATION_LIMIT)
             (_, result, _, rmse) = fit_model(frequencies, normalized_spectrum)
-            rmse_values.append(rmse) 
-            # intensity_values.append(calculate_total_intensity(spectrum, frequencies))
-            # normalized_spectrum = normalize_spectrum(spectrum)
-            # (_, result, _, _) = fit_model(frequencies, normalized_spectrum)
-            p = result.params
+            rmse_values.append(rmse)
             
-            # Plot each peak
+            p = result.params
+            measurement_datetime = measurement_datetimes[j]
+            left_edge = voronoi_edges[j]
+            right_edge = voronoi_edges[j+1]
+            duration = right_edge - left_edge
+            
+            peak_data = []
+            max_fit_intensity = 0
+            
             for i, cfg in enumerate(FITTING_MODEL):
                 if cfg['type'] == 'peak':
                     prefix = f'g{i}_'
-                    color = COLORMAP_FOR_GAUSSIANS(i / gauss_count)
                     center = p[f'{prefix}center'].value
                     fwhm = p[f'{prefix}fwhm'].value
-                    
-                    measurement_datetime = measurement_datetimes[j]
-                    left_edge = voronoi_edges[j]
-                    right_edge = voronoi_edges[j+1]
-                    duration = right_edge - left_edge
- 
-                    rect = patches.Rectangle(
-                        (center - fwhm/2, left_edge), 
-                        fwhm, 
-                        duration, 
-                        linewidth=1, 
-                        edgecolor=color, 
-                        facecolor=color, 
-                        alpha=0.4
-                    )
-                    ax0.add_patch(rect)                   
-                    ax0.scatter(center, measurement_datetime.timestamp(), color=color, edgecolors='black')
-                    plot_rectangles(ax0, gauss_count, fill=False)
-
+                    amplitude = p[f'{prefix}amplitude'].value
+                    intensity = amplitude * fwhm
+                    max_fit_intensity = max(max_fit_intensity, intensity)
+                    peak_data.append((i, center, fwhm, amplitude, intensity))
+            
+            for i, center, fwhm, amplitude, intensity in peak_data:
+                color = COLORMAP_FOR_GAUSSIANS(i / gauss_count)
+                rect = patches.Rectangle(
+                    (center - fwhm/2, left_edge), 
+                    fwhm, 
+                    duration, 
+                    linewidth=1, 
+                    edgecolor=color, 
+                    facecolor=color, 
+                    alpha = intensity / max_fit_intensity
+                )
+                ax0.add_patch(rect)                   
+                ax0.scatter(center, measurement_datetime.timestamp(), color=color, edgecolors='black')
+                        
+        plot_rectangles(ax0, gauss_count, fill=False)
 
         ax1.scatter(rmse_values, [d.timestamp() for d in measurement_datetimes], color='grey', edgecolors='black')
         ax1.plot(rmse_values, [d.timestamp() for d in measurement_datetimes], 'k-')
@@ -280,7 +279,7 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
                 handles.append(mpatches.Patch(color=color, label=f'Gauss peak {i}: {center} Hz'))
         patch = mpatches.Patch(color='None', label=f"Gauss peak N: range for center position")
         handles.append(patch) 
-        datapoints_info = "\nEvolution of FWHM (colored areas) and\ncenter positions (dots) of gauss peaks\nfor fitted individual acoustic spectra\n{}Sensor: {}".format(get_info_total(filtered_ds), sensor_id, FITTING_WINDOW_MIN, FITTING_WINDOW_MAX)
+        datapoints_info = "\nEvolution of FWHM (colored areas), \ncenter positions (dots) and\nintensity within each fit (color saturation)\nof gauss peaks for fitted acoustic spectra\n{}Sensor: {}".format(get_info_total(filtered_ds), sensor_id, FITTING_WINDOW_MIN, FITTING_WINDOW_MAX)
         patch = mpatches.Patch(color='None', label=datapoints_info) 
         handles.append(patch)
         window_text = f"\nWindow used for fitting: {FITTING_WINDOW_MIN} to {FITTING_WINDOW_MAX} Hz"
@@ -288,8 +287,6 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
         handles.append(patch)
         fig.legend(bbox_to_anchor=(0.98, 0.98), handles=handles, fontsize=9)
 
-        patch = mpatches.Patch(color='None', label=f"Gauss peak N: Center, FWHM, Amplitude")
-        handles.append(patch) 
         plt.tight_layout()
         plt.subplots_adjust(right=0.74)
 
@@ -308,8 +305,8 @@ def plot_evolution(ds, start, end, output_path, name_overide=None):
         plt.close()
         logging.info(f"PNG file {img_pathname} was created!")
 
-        total_time = time.time() - start_time
-        logging.info(f"Total plot creation time: {total_time:.2f} seconds")
+    total_time = time.time() - start_time
+    logging.info(f"Total plot creation time: {total_time:.2f} seconds")
     return images
 
 def plot_peak_evolution_example():

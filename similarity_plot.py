@@ -51,7 +51,6 @@ def get_ticks_for_helsinki_tz(start, end):
     start = start.astimezone(HELSINKI_TZ)
     end = end.astimezone(HELSINKI_TZ)
     assert start < end
-
     if (end - start) < pd.Timedelta(hours = 12):
         step_in_hours = 1
         before_start = start.replace(minute=0, second=0, microsecond=0) 
@@ -61,7 +60,7 @@ def get_ticks_for_helsinki_tz(start, end):
         while (moving < after_end):
             moving = moving + pd.Timedelta(hours=step_in_hours)
             ticks.append(moving)
-    else:
+    elif (end - start) < pd.Timedelta(days = 8):
         step_in_hours = 12
         midnight_before_start = start.replace(hour=0, minute=0, second=0, microsecond=0) 
         midnight_after_end    = end.replace(hour=0, minute=0, second=0, microsecond=0) + pd.Timedelta(days=1)
@@ -70,7 +69,15 @@ def get_ticks_for_helsinki_tz(start, end):
         while (moving < midnight_after_end):
             moving = moving + pd.Timedelta(hours=step_in_hours)
             ticks.append(moving)
-
+    else:
+        step_in_hours = 24
+        midnight_before_start = start.replace(hour=0, minute=0, second=0, microsecond=0) 
+        midnight_after_end    = end.replace(hour=0, minute=0, second=0, microsecond=0) + pd.Timedelta(days=1)
+        ticks = [copy.deepcopy(midnight_before_start)]
+        moving = midnight_before_start
+        while (moving < midnight_after_end):
+            moving = moving + pd.Timedelta(hours=step_in_hours)
+            ticks.append(moving)
     return ticks
 
 def get_extended_datetimes(ds, sensor_id, start, end):

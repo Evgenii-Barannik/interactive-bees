@@ -28,7 +28,13 @@ def fit_model(x_full, y_full):
     params = Parameters()
     bg = FITTING_MODEL[0]
     params.add('bg_slope', value=bg['slope_guess'], vary=False)
-    params.add('bg_intercept', value=bg['intercept_guess'], min=0, max=np.min(y_masked))
+    
+    min_y = np.min(y_masked)
+    if min_y == 0:
+        params.add('bg_intercept', value=bg['intercept_guess'], min=0, max=100)
+    else:
+        params.add('bg_intercept', value=bg['intercept_guess'], min=0, max=min_y)
+        
     for i, cfg in enumerate(FITTING_MODEL):
         if cfg['type'] == 'peak':
             prefix = f'g{i}_'
