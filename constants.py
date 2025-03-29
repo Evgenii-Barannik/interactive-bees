@@ -3,10 +3,9 @@ from datetime import datetime
 import pandas as pd
 import os 
 import matplotlib as mpl
-import git
-
-repo = git.Repo(search_parent_directories=True)
-sha = repo.head.object.hexsha
+# import git
+# repo = git.Repo(search_parent_directories=True)
+# sha = repo.head.object.hexsha
 # GIT_COMMIT_SHA = repo.git.rev_parse(sha, short=7)
 ARTIFACT_NAME_BLUEPRINT = "{plotname}_{sensors}_from_{first_datetime}_to_{last_datetime}.{extension}"
 
