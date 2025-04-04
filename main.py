@@ -24,7 +24,8 @@ if __name__ == "__main__":
         ]
     )
 
-    sensors = [109, 113, 116, 117]
+    sensors = [109, 113, 116, 117] 
+
     start = HELSINKI_2DAYS_AGO
     end = HELSINKI_NOW 
     # sensors = [116, 20]
