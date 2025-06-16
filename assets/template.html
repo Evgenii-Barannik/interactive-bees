@@ -27,11 +27,6 @@
         </label>
     </div>
 
-    <!-- Audio controls for playing sounds from acoustic spectra
-         - 'Play Audio' button generates sound from the current acoustic spectrum of the selected sensor
-         - 'Stop' button stops any currently playing sound
-         - You can also click directly on a frequency in the spectrum to hear that specific tone
-    -->
     <div class="audio-controls-container">
 	<br>Play sound for shown acoustic spectrum:<br>
 	<select id="audioSensorSelector">	
@@ -109,15 +104,6 @@
       </div>
 
       <div class="column">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-left: 60px">
-            <div class="title">Peak relations</div>
-            <select id="peakRelationsImageSelector" style="width: 100px; margin-right: 20px;">
-                {% for sensor in sensors %}
-                <option value="{{image_paths[sensor]['peak_relations']}}">Sensor {{sensor}}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <img id="displayedPeakRelationsImage" class="image-container" src="{{image_paths[sensors[0]]['peak_relations']}}" alt="Peak intensity relations">
       </div>
     <!-- -->
     </div>
@@ -145,7 +131,6 @@
     <script src="{{OUTPUT_DIR}}/gauss_selectors.js?v={{version}}"></script>
     <script src="{{OUTPUT_DIR}}/spectra_callback.js?v={{version}}"></script>
     <script src="{{OUTPUT_DIR}}/playing_audio.js?v={{version}}"></script>
-    <script src="{{OUTPUT_DIR}}/peak_relations_selector.js?v={{version}}"></script>
     <script>
         // Initialize Gaussian image paths after all scripts are loaded
         if (typeof initGaussImagePaths === 'function') {

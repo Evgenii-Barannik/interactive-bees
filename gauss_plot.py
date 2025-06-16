@@ -249,10 +249,3 @@ if __name__ == "__main__":
 
     gauss_example = plot_gauss_example()
     show_image(gauss_example[0])
-    
-    # start = HELSINKI_2DAYS_AGO
-    # end = HELSINKI_NOW 
-    # plot_averaged_and_individual_spectra([116], start, end)
-
-    # gauss_current = plot_gauss_current()
-    # show_image(gauss_current[0])
