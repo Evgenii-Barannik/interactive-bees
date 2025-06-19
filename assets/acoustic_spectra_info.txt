@@ -1,1 +1,1 @@
-Each shown spectrum is created from possibly multiple datapoints selected by "Time range selection plot". Spectra for each sensor are averaged and results are then normalized.
+Each shown spectrum is created from possibly multiple data points selected in "Time range selection" plot. Spectra for each sensor are averaged, and the results are then normalized.
