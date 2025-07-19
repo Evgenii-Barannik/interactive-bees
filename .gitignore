@@ -1,6 +1,4 @@
-data/*
 __pycache__/*
-*autobuild*
 
 index.html
 plotly-js-example/simple_plot.html
