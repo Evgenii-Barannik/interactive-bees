@@ -67,7 +67,7 @@ function generate_wave(frequencies, amplitudes, duration = 2.0, sampleRate = 441
     source.connect(audioCtx.destination);
     source.start();
 
-    console.log('Sound generated and looped smoothly');
+    console.log('Sound generated and looped');
 
     /*
     // Convert the audio buffer to WAV format
@@ -98,9 +98,9 @@ function playSound() {
     const spectraPlot = document.querySelector('#acoustic_spectra_plot .js-plotly-plot');
     const timeSlider = document.querySelector('#time_slider_plot .js-plotly-plot');
 
-    console.log(`Preparing sound for sensor ${sensor}`);
+    console.log('Play button clicked. Sensor:', sensor);
     if (!spectraPlot) {
-        console.error("Acoustic spectra plot not found");
+        console.error('Acoustic spectra plot not found');
         return;
     }
     
@@ -113,7 +113,7 @@ function playSound() {
         }
     }
     if (!sensorData) {
-        console.error(`Error: data for sensor ${sensor} was not found`);
+        console.error('Data for sensor not found:', sensor);
         return;
     }
     
@@ -121,8 +121,8 @@ function playSound() {
     const amplitudes = sensorData.y;
     
     if (!frequencies || !amplitudes || frequencies.length === 0 || amplitudes.length === 0) {
-        console.error("No acoustic data available for selected time range");
-        document.getElementById('audioDebugInfo').textContent = "No acoustic data available for selected time range";
+        console.error('No acoustic data available for selected time range');
+        document.getElementById('audioDebugInfo').textContent = 'No acoustic data available for selected time range';
         return;
     }
 
@@ -130,7 +130,10 @@ function playSound() {
     let numDatapoints = 0;
     
     if (timeSlider && timeSlider.layout && timeSlider.layout.xaxis) {
-	timeRange = timeSlider.layout.xaxis.range;
+        timeRange = timeSlider.layout.xaxis.range;
+        console.log('timeRange exists:', timeRange);
+    } else {
+        console.log('timeRange is missing');
     }
     
     if (sensorData.meta && sensorData.meta.raw_times && timeRange) {
@@ -159,7 +162,7 @@ function playSound() {
     document.getElementById('audioDebugInfo').textContent = debugInfo;
     var end = performance.now();
     var duration = end - start;
-    console.log('Sound preparation took', duration, 'ms')
+    console.log('Sound preparation took', duration, 'ms');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -168,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const audioSensorSelector = document.getElementById('audioSensorSelector');
     
     if (playSpectrumButton) {
+	window.dispatchEvent(new Event('resize'));
         playSpectrumButton.addEventListener('click', playSound);
     }
     
