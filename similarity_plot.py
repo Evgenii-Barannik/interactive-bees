@@ -17,16 +17,16 @@ def calculate_pearson_distance(spectra):
     distance_matrix = squareform(distances)
     return distance_matrix
 
-def calculate_fisher_information_distance(spectra):
+def calculate_hellinger_distance(spectra):
     num_spectra = spectra.shape[0]
     distance_matrix = np.zeros((num_spectra, num_spectra))
     for i in range(num_spectra):
         for j in range(i, num_spectra):
             spectrum_i = spectra[i] / np.sum(spectra[i])
             spectrum_j = spectra[j] / np.sum(spectra[j])
-            fisher_distance = np.sqrt(np.sum((np.sqrt(spectrum_i) - np.sqrt(spectrum_j)) ** 2))
-            distance_matrix[i, j] = fisher_distance
-            distance_matrix[j, i] = fisher_distance 
+            hellinger_distance = np.sqrt(np.sum((np.sqrt(spectrum_i) - np.sqrt(spectrum_j)) ** 2))
+            distance_matrix[i, j] = hellinger_distance
+            distance_matrix[j, i] = hellinger_distance 
     return distance_matrix
 
 def calculate_angular_distance(spectra):
@@ -174,7 +174,7 @@ def plot_similarity(ds, start, end, output_path, name_overide=None):
 
         # Compute distances, will be used to color Voronoi cells
         pearson_matrix = calculate_pearson_distance(spectra)
-        fisher_matrix = calculate_fisher_information_distance(spectra)
+        hellinger_matrix = calculate_hellinger_distance(spectra)
         angular_matrix = calculate_angular_distance(spectra)
         euclidean_matrix = calculate_euclidean_distance(spectra)
 
@@ -192,8 +192,8 @@ def plot_similarity(ds, start, end, output_path, name_overide=None):
         axes[1, 0].set_title('Angular distance')
         plt.colorbar(im3, ax=axes[1, 0])
 
-        im4 = axes[1, 1].pcolormesh(x_edges, y_edges, fisher_matrix, cmap=colormap, shading="auto")
-        axes[1, 1].set_title('Fisher distance')
+        im4 = axes[1, 1].pcolormesh(x_edges, y_edges, hellinger_matrix, cmap=colormap, shading="auto")
+        axes[1, 1].set_title('Hellinger distance')
         plt.colorbar(im4, ax=axes[1, 1])
 
         # Data is ploted using unix epochs

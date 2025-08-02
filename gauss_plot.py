@@ -125,13 +125,13 @@ def plot_gaussians(ds, sensors_to_draw, start, end, output_path):
                 center = p[f'g{j}_center'].value
                 fwhm = p[f'g{j}_fwhm'].value
                 color = COLORMAP_FOR_GAUSSIANS(j / gauss_count)
-                
+                letter = chr(64 + j)
                 ax1.plot(
                     x_masked,
                     comp,
                     color=color,
                     linewidth=2.0,
-                    label=f"Gauss peak {j}: {center:>6.1f} Hz, {fwhm:>6.1f} Hz, {amplitude:>6.1f}"
+                    label=f"Gauss peak {letter}: {center:>6.1f} Hz, {fwhm:>6.1f} Hz, {amplitude:>6.1f}"
                 )
                 # # Reactangles
                 # rect = patches.Rectangle((center - fwhm/2, 0), fwhm, 100, linewidth=1, edgecolor=color, facecolor=color, alpha=0.3)
