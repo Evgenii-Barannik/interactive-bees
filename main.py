@@ -22,11 +22,10 @@ if __name__ == "__main__":
             logging.StreamHandler()  # Log to console
         ]
     )
-
-    sensors = [109, 116] 
-
-    start = HELSINKI_2DAYS_AGO
-    end = HELSINKI_NOW 
+    
+    sensors = [109, 116]
+    start = datetime(2025, 7, 14, 0, tzinfo = HELSINKI_TZ)
+    end = datetime(2025, 7, 17, 0, 0, tzinfo = HELSINKI_TZ)
 
     csv_files = download_csv_if_needed(
             sensors,

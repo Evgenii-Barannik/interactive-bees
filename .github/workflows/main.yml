@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - html3
-  schedule:
-    - cron: '*/30 * * * *' # Will trigger every 30 min
+  # schedule:
+  # - cron: '*/30 * * * *' # Will trigger every 30 min
     
 permissions:
   contents: write
